@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#053D78">
+<title>TECOR — Balansiranje operacija</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<style>
+:root{
+  --blue:#053D78; --blue-d:#04305f; --blue-l:#1b5fa8; --grey:#AAA9A7;
+  --va:#2e7d32; --va-bg:#e8f5e9; --sp:#e65100; --sp-bg:#fff3e0;
+  --nva:#c62828; --nva-bg:#ffebee; --prep:#546273; --prep-bg:#eceff2;
+  --bg:#eef1f4; --surface:#ffffff; --line:#dde3e8; --text:#16212e;
+  --muted:#5d6b78; --ok:#2e7d32; --warn:#e65100; --bad:#c62828;
+  --radius:12px; --shadow:0 1px 3px rgba(8,30,55,.08),0 6px 20px rgba(8,30,55,.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);
+  font-size:15px;line-height:1.45;padding-bottom:76px}
+h1,h2,h3{margin:0 0 .4em;line-height:1.15;color:var(--blue-d)}
+h2{font-size:1.25rem}h3{font-size:1.02rem}
+a{color:var(--blue-l)}
+.tnum{font-variant-numeric:tabular-nums}
+/* header */
+header.app{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;padding:8px 14px;padding-top:calc(8px + env(safe-area-inset-top))}
+header.app img.logo{height:30px;width:auto}
+header.app .spacer{flex:1}
+.lang{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px}
+.lang button{border:0;background:transparent;font-weight:700;color:var(--muted);padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.8rem}
+.lang button.on{background:var(--blue);color:#fff}
+/* layout */
+main{max-width:1100px;margin:0 auto;padding:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:16px;margin-bottom:14px}
+.card>h2:first-child,.card>h3:first-child{margin-top:0}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:0}
+.muted{color:var(--muted)}.small{font-size:.82rem}
+.center{text-align:center}
+label.f{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin:0 0 4px;text-transform:uppercase;letter-spacing:.03em}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;background:#fff;color:var(--text)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue-l);outline-offset:0;border-color:var(--blue-l)}
+.field{margin-bottom:12px}
+/* buttons */
+button{font:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:10px;padding:11px 16px;
+  font-weight:700;cursor:pointer;background:var(--blue);color:#fff;transition:filter .12s}
+.btn:hover{filter:brightness(1.07)}.btn:active{filter:brightness(.94)}
+.btn.ghost{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.grey{background:#eef1f4;color:var(--text);border:1px solid var(--line)}
+.btn.sm{padding:7px 11px;font-size:.85rem;border-radius:8px}
+.btn.wide{width:100%}
+.btn.danger{background:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.iconbtn{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;display:inline-flex;
+  align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:1.05rem;padding:0}
+.iconbtn:hover{color:var(--bad);border-color:var(--bad)}
+/* nav */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:40;background:#fff;border-top:1px solid var(--line);
+  display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;border:0;background:transparent;padding:9px 2px 7px;display:flex;flex-direction:column;align-items:center;
+  gap:3px;color:var(--muted);font-size:.68rem;font-weight:600;cursor:pointer}
+nav.tabs button .ic{font-size:1.25rem;line-height:1}
+nav.tabs button.on{color:var(--blue)}
+nav.tabs button.on .ic{transform:translateY(-1px)}
+/* chips / badges */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:.74rem;font-weight:700}
+.chip.va{background:var(--va-bg);color:var(--va)} .chip.sp{background:var(--sp-bg);color:var(--sp)}
+.chip.nva{background:var(--nva-bg);color:var(--nva)} .chip.prep{background:var(--prep-bg);color:var(--prep)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.va-c{color:var(--va)}.sp-c{color:var(--sp)}.nva-c{color:var(--nva)}
+.va-bgc{background:var(--va)}.sp-bgc{background:var(--sp)}.nva-bgc{background:var(--nva)}.prep-bgc{background:var(--prep)}
+.status{padding:2px 8px;border-radius:6px;font-weight:700;font-size:.78rem}
+.status.ok{background:var(--va-bg);color:var(--va)}.status.warn{background:var(--sp-bg);color:var(--sp)}
+.status.bad{background:var(--nva-bg);color:var(--nva)}
+/* tables */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+th,td{padding:8px 9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;background:#f7f9fb}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.bottleneck td{background:#fff6f5}
+/* operation list */
+.op{border:1px solid var(--line);border-radius:11px;margin-bottom:10px;overflow:hidden}
+.op>.op-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:#fff;cursor:pointer}
+.op>.op-head .seq{width:26px;height:26px;border-radius:7px;background:var(--blue);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:.82rem;flex:none}
+.op.prep>.op-head .seq{background:var(--prep)}
+.op .op-body{padding:0 13px 12px;border-top:1px solid var(--line)}
+.task{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.task:last-child{border-bottom:0}
+.task .tname{flex:1;min-width:0}
+.cat-seg{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.cat-seg button{border:0;background:#fff;padding:6px 10px;font-weight:700;font-size:.78rem;cursor:pointer;color:var(--muted)}
+.cat-seg button.on.va{background:var(--va);color:#fff}.cat-seg button.on.sp{background:var(--sp);color:#fff}
+.cat-seg button.on.nva{background:var(--nva);color:#fff}
+/* recorder */
+.rec-wrap{text-align:center}
+.rec-timer{font-size:clamp(3.2rem,17vw,5.5rem);font-weight:800;color:var(--blue-d);font-variant-numeric:tabular-nums;
+  letter-spacing:-.02em;line-height:1;margin:6px 0}
+.rec-task{font-size:1.1rem;font-weight:700;margin:2px 0}
+.big-btn{width:100%;max-width:420px;margin:14px auto 0;height:118px;border-radius:18px;border:0;font-size:1.5rem;font-weight:800;
+  color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:var(--shadow)}
+.big-btn.start{background:var(--va)}.big-btn.stop{background:var(--nva)}
+.big-btn span.sub{font-size:.8rem;font-weight:600;opacity:.9}
+.rec-progress{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.rec-progress .pdot{width:auto;min-width:30px;padding:4px 7px;border-radius:7px;background:#eef1f4;font-size:.74rem;font-weight:700;
+  color:var(--muted);border:1px solid var(--line)}
+.rec-progress .pdot.done{background:var(--va-bg);color:var(--va);border-color:var(--va)}
+.rec-progress .pdot.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* yamazumi */
+.yama{display:flex;gap:14px;align-items:flex-end;overflow-x:auto;padding:8px 4px 4px;min-height:240px;position:relative}
+.yama .ycol{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none;width:74px}
+.yama .ybar{width:54px;border-radius:6px 6px 0 0;display:flex;flex-direction:column-reverse;overflow:hidden;border:1px solid rgba(0,0,0,.08)}
+.yama .yseg{width:100%}
+.yama .ylabel{font-size:.72rem;text-align:center;font-weight:600;color:var(--muted);max-width:74px;white-space:normal;line-height:1.15}
+.yama .yct{font-weight:800;font-size:.82rem}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted);font-weight:600}
+/* kpi */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px}
+.kpi .v{font-size:1.5rem;font-weight:800;color:var(--blue-d);line-height:1.1}
+.kpi .l{font-size:.74rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
+.kpi.good{border-left:4px solid var(--va)}.kpi.warn{border-left:4px solid var(--sp)}.kpi.bad{border-left:4px solid var(--nva)}
+/* seg toggle */
+.seg{display:inline-flex;background:#eef1f4;border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:7px 13px;border-radius:7px;font-weight:700;font-size:.82rem;color:var(--muted);cursor:pointer}
+.seg button.on{background:#fff;color:var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+/* slider */
+.sl{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.sl button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;color:var(--muted)}
+.sl button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* toast / modal */
+#toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--blue-d);color:#fff;padding:11px 18px;
+  border-radius:10px;font-weight:600;font-size:.88rem;box-shadow:var(--shadow);z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;max-width:92vw}
+#toast.show{opacity:1}
+.modal-bg{position:fixed;inset:0;background:rgba(10,25,45,.5);z-index:70;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:20px;box-shadow:var(--shadow)}
+.modal h3{margin-top:0}
+.banner{background:var(--sp-bg);border:1px solid #ffcc99;color:#8a3d00;border-radius:10px;padding:10px 13px;font-size:.85rem;
+  display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.empty{text-align:center;color:var(--muted);padding:30px 12px}
+.empty .em{font-size:2.4rem;margin-bottom:6px}
+.hide{display:none!important}
+.flex-between{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tag{display:inline-block;background:var(--blue);color:#fff;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:5px;vertical-align:middle}
+hr.sep{border:0;border-top:1px solid var(--line);margin:14px 0}
+@media(min-width:760px){
+  body{font-size:15px}
+  .desk-row{display:flex;gap:14px}.desk-row>*{flex:1}
+}
+</style>
+</head>
+<body>
+<header class="app">
+  <img src="assets/logo.png" class="logo" alt="TECOR Lean &amp; Kaizen consulting">
+  <span class="spacer"></span>
+  <div class="lang" id="lang">
+    <button data-l="sr" class="on">SR</button>
+    <button data-l="en">EN</button>
+  </div>
+</header>
+
+<main id="app"><!-- screens injected here --></main>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="home"><span class="ic">📁</span><span data-t="nav.home">Sesija</span></button>
+  <button data-tab="setup"><span class="ic">⚙️</span><span data-t="nav.setup">Podešavanje</span></button>
+  <button data-tab="record"><span class="ic">⏱️</span><span data-t="nav.record">Snimanje</span></button>
+  <button data-tab="analyze"><span class="ic">📊</span><span data-t="nav.analyze">Analiza</span></button>
+  <button data-tab="export"><span class="ic">📤</span><span data-t="nav.export">Izvoz</span></button>
+</nav>
+
+<div id="toast"></div>
+<div class="modal-bg" id="modalbg"><div class="modal" id="modal"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   TECOR — Balansiranje operacija
+   Single-file PWA. Lean time-study + line balancing + WIP.
+   ============================================================ */
+
+/* ---------- i18n ---------- */
+const I18N = {
+ sr:{
+  app_title:"Balansiranje operacija",
+  "nav.home":"Sesija","nav.setup":"Podešavanje","nav.record":"Snimanje","nav.analyze":"Analiza","nav.export":"Izvoz",
+  cat_va:"VA",cat_sp:"SP",cat_nva:"NVA",cat_prep:"Priprema",
+  va_full:"Dodaje vrednost",sp_full:"Pomoćna (support)",nva_full:"Ne dodaje vrednost",
+  // home
+  home_title:"Sesija merenja",
+  new_session:"Nova sesija",resume:"Nastavi nedovršenu sesiju",load_json:"Učitaj sesiju (.json)",
+  no_autosave:"Nema sačuvane sesije.",autosave_found:"Pronađena automatski sačuvana sesija",
+  autosave_q:"Postoji sesija od {d}. Nastaviti je ili početi novu?",continue:"Nastavi",discard:"Odbaci",
+  session_info:"Podaci o snimanju",client:"Klijent",process:"Proces / linija",location:"Lokacija (pozicija)",
+  observer:"Snimatelj",date:"Datum",notes:"Napomene",
+  unsaved:"Nije izvezeno",saved_ok:"Izvezeno",
+  // takt + shift
+  params:"Parametri procesa",takt_time:"Takt time",takt_mode:"Način unosa",takt_direct:"Direktno (s)",
+  takt_calc:"Vreme / količina",avail_time:"Raspoloživo vreme (s)",demand:"Tražena količina (kom)",
+  shift:"Trajanje smene (h)",gap_residual:"Rezidualni balansni gubitak (%)",
+  takt_result:"Takt = {v} s/kom",
+  // setup ops
+  operations:"Operacije",add_reg:"+ Redovna operacija",add_prep:"+ Pripremna operacija",
+  op_name:"Naziv operacije",operator:"Operater",op_regular:"Redovna",op_prep:"Pripremna",
+  tasks:"Zahvati (sekvencijalno)",add_task:"+ Zahvat",task_name:"Naziv zahvata",
+  prep_total:"Ukupno vreme (s)",prep_pieces:"Broj komada",prep_link:"Alokacija",
+  link_none:"Bez alokacije",link_prev:"Na prethodnu operaciju",link_next:"Na narednu operaciju",
+  prep_per:"Po komadu: {v} s",
+  no_ops:"Još nema operacija. Dodaj prvu.",max_tasks:"Maksimum 10 zahvata po operaciji.",
+  iters:"merenja",avg:"prosek",
+  del_op_q:"Obrisati operaciju i sva njena merenja?",del_task_q:"Obrisati zahvat?",
+  // record
+  rec_pick:"Izaberi operaciju za snimanje",rec_none:"Dodaj operacije i zahvate u Podešavanju.",
+  rec_prep_info:"Pripremne operacije se ne snimaju štopericom — unesi ukupno vreme i komade u Podešavanju.",
+  start:"START",stop:"STOP",rec_iter:"Iteracija {n}",rec_done_task:"Zahvat snimljen",
+  rec_all_done:"Svi zahvati snimljeni — iteracija {n} završena",next_iter:"Nova iteracija",
+  rec_save_iter:"Sačuvaj iteraciju",rec_active:"Aktivan zahvat",rec_tap_start:"Dodirni START za početak",
+  rec_op_ct:"CT operacije (prosek)",rec_measure_count:"{n} merenja",
+  invalid_iter:"Nevalidno (0 s)",
+  // analyze
+  view:"Pogled",v_regular:"Redovne",v_prep:"Pripremne",v_combined:"Kombinovano",
+  with_nva:"Sa NVA",without_nva:"Bez NVA",
+  process_ct:"CT procesa (bottleneck)",total_wc:"Ukupan rad",line_eff:"Efikasnost linije",
+  bottleneck:"Usko grlo",balance_loss:"Balansni gubitak",throughput:"Kapacitet / smena",req_ops:"Potrebno operatera",
+  op_table:"Operacije i CT",h_op:"Operacija",h_oper:"Operater",h_ct:"CT (s)",h_va:"VA",h_sp:"SP",h_nva:"NVA",
+  h_prep:"Prep",h_rate:"kom/h",h_gap:"GAP vs grlo",h_takt:"vs Takt",
+  yamazumi:"Yamazumi — struktura CT po operaciji",takt_line:"Takt",bn_line:"Bottleneck",
+  no_data:"Nema dovoljno izmerenih podataka za analizu.",
+  // wip
+  wip_title:"WIP / zalihe između operacija",
+  wip_intro:"Tamo gde je uzvodna operacija brža od nizvodne, zaliha se gomila.",
+  h_pair:"Između",h_acc:"Brzina gomilanja (kom/h)",h_wip:"WIP / smena (kom)",h_queue:"Queue time",
+  no_wip:"Nema gomilanja zaliha — linija je uravnotežena ili nema dovoljno operacija.",
+  wip_worst:"Najkritičnija tačka",
+  // balancing
+  bal_title:"Balansiranje linije",
+  bal_bottleneck:"Usko grlo: {op} ({ct} s). Određuje tempo cele linije.",
+  bal_under:"Podopterećeno: {op} ({ct} s) — {gap} s ispod uskog grla.",
+  bal_over_takt:"Iznad takta: {op} ({ct} s > {takt} s) — ne stiže traženi tempo.",
+  bal_nva_tip:"{op}: NVA je {nva} s. Eliminacija 50% spušta CT na {res} s.",
+  bal_balanced:"Linija je relativno uravnotežena (efikasnost {eff}%).",
+  bal_suggest:"Predlozi",
+  // norms
+  norms_title:"Norme i scenariji",
+  norm_asis:"Realna (as-is)",norm_best:"Best case",norm_scenario:"Scenario",
+  norm_asis_d:"Prosečna izmerena vremena, NVA i GAP u punom iznosu.",
+  norm_best_d:"NVA potpuno neutralisan, GAP na rezidualni prag.",
+  nva_reduction:"Redukcija NVA",gap_reduction:"Redukcija GAP",
+  h_norm:"Norma",h_pct:"CT/kom (s)",h_cap:"kom/smena",h_eff:"Efikasnost",h_vstakt:"vs Takt",
+  scenario_formula:"CT = VA + SP + NVA·(1−nva%) + GAP·(1−gap%) + Prep",
+  // export
+  export_title:"Izvoz rezultata",
+  exp_pdf:"PDF izveštaj",exp_xlsx:"Excel (.xlsx)",exp_csv:"CSV (merenja)",exp_json:"Sačuvaj sesiju (.json)",
+  exp_pdf_d:"Kompletan izveštaj: struktura, VA/NVA/SP, GAP, Yamazumi, WIP, norme.",
+  exp_xlsx_d:"Sve tabele u zasebnim listovima.",
+  exp_csv_d:"Sva pojedinačna merenja po iteracijama.",
+  exp_json_d:"Za nastavak rada kasnije ili na drugom uređaju.",
+  exp_done:"Sesija je izvezena — bezbedno je zatvoriti.",
+  comments:"Komentari / zaključak (za izveštaj)",conclusion_ph:"Glavni nalazi, dogovorene akcije…",
+  // misc
+  takt_s:"s/kom",sec:"s",pcs:"kom",over:"iznad",under:"ispod",ok:"u taktu",
+  confirm:"Potvrdi",cancel:"Odustani",close:"Zatvori",delete:"Obriši",
+  reload_warn:"Imaš nesačuvana merenja koja nisu izvezena. Sigurno želiš da napustiš stranicu?",
+  toast_added:"Dodato",toast_saved:"Sačuvano",toast_loaded:"Sesija učitana",toast_iter_saved:"Iteracija sačuvana",
+  install:"Instaliraj aplikaciju",update_ready:"Dostupna je nova verzija",refresh_now:"Osveži",
+  none:"—",yes:"Da",no:"Ne"
+ },
+ en:{
+  app_title:"Operation Balancing",
+  "nav.home":"Session","nav.setup":"Setup","nav.record":"Record","nav.analyze":"Analyze","nav.export":"Export",
+  cat_va:"VA",cat_sp:"SP",cat_nva:"NVA",cat_prep:"Prep",
+  va_full:"Value-adding",sp_full:"Support",nva_full:"Non-value-adding",
+  home_title:"Measurement session",
+  new_session:"New session",resume:"Resume unfinished session",load_json:"Load session (.json)",
+  no_autosave:"No saved session.",autosave_found:"Auto-saved session found",
+  autosave_q:"There is a session from {d}. Continue it or start new?",continue:"Continue",discard:"Discard",
+  session_info:"Study details",client:"Client",process:"Process / line",location:"Location (position)",
+  observer:"Observer",date:"Date",notes:"Notes",
+  unsaved:"Not exported",saved_ok:"Exported",
+  params:"Process parameters",takt_time:"Takt time",takt_mode:"Input mode",takt_direct:"Direct (s)",
+  takt_calc:"Time / quantity",avail_time:"Available time (s)",demand:"Demand quantity (pcs)",
+  shift:"Shift duration (h)",gap_residual:"Residual balancing loss (%)",
+  takt_result:"Takt = {v} s/pc",
+  operations:"Operations",add_reg:"+ Regular operation",add_prep:"+ Preparatory operation",
+  op_name:"Operation name",operator:"Operator",op_regular:"Regular",op_prep:"Preparatory",
+  tasks:"Tasks (sequential)",add_task:"+ Task",task_name:"Task name",
+  prep_total:"Total time (s)",prep_pieces:"Number of pieces",prep_link:"Allocation",
+  link_none:"No allocation",link_prev:"To previous operation",link_next:"To next operation",
+  prep_per:"Per piece: {v} s",
+  no_ops:"No operations yet. Add the first one.",max_tasks:"Maximum 10 tasks per operation.",
+  iters:"measurements",avg:"avg",
+  del_op_q:"Delete operation and all its measurements?",del_task_q:"Delete task?",
+  rec_pick:"Pick an operation to record",rec_none:"Add operations and tasks in Setup.",
+  rec_prep_info:"Preparatory operations aren't timed — enter total time and pieces in Setup.",
+  start:"START",stop:"STOP",rec_iter:"Iteration {n}",rec_done_task:"Task recorded",
+  rec_all_done:"All tasks recorded — iteration {n} complete",next_iter:"New iteration",
+  rec_save_iter:"Save iteration",rec_active:"Active task",rec_tap_start:"Tap START to begin",
+  rec_op_ct:"Operation CT (avg)",rec_measure_count:"{n} measurements",
+  invalid_iter:"Invalid (0 s)",
+  view:"View",v_regular:"Regular",v_prep:"Prep",v_combined:"Combined",
+  with_nva:"With NVA",without_nva:"Without NVA",
+  process_ct:"Process CT (bottleneck)",total_wc:"Total work",line_eff:"Line efficiency",
+  bottleneck:"Bottleneck",balance_loss:"Balancing loss",throughput:"Capacity / shift",req_ops:"Operators needed",
+  op_table:"Operations & CT",h_op:"Operation",h_oper:"Operator",h_ct:"CT (s)",h_va:"VA",h_sp:"SP",h_nva:"NVA",
+  h_prep:"Prep",h_rate:"pcs/h",h_gap:"GAP vs BN",h_takt:"vs Takt",
+  yamazumi:"Yamazumi — CT structure per operation",takt_line:"Takt",bn_line:"Bottleneck",
+  no_data:"Not enough measured data for analysis.",
+  wip_title:"WIP / inventory between operations",
+  wip_intro:"Where an upstream operation is faster than downstream, inventory accumulates.",
+  h_pair:"Between",h_acc:"Accumulation (pcs/h)",h_wip:"WIP / shift (pcs)",h_queue:"Queue time",
+  no_wip:"No inventory build-up — line is balanced or not enough operations.",
+  wip_worst:"Most critical point",
+  bal_title:"Line balancing",
+  bal_bottleneck:"Bottleneck: {op} ({ct} s). Sets the pace of the whole line.",
+  bal_under:"Underloaded: {op} ({ct} s) — {gap} s below the bottleneck.",
+  bal_over_takt:"Above takt: {op} ({ct} s > {takt} s) — can't keep the required pace.",
+  bal_nva_tip:"{op}: NVA is {nva} s. Removing 50% lowers CT to {res} s.",
+  bal_balanced:"Line is relatively balanced (efficiency {eff}%).",
+  bal_suggest:"Suggestions",
+  norms_title:"Norms & scenarios",
+  norm_asis:"As-is",norm_best:"Best case",norm_scenario:"Scenario",
+  norm_asis_d:"Average measured times, NVA and GAP at full value.",
+  norm_best_d:"NVA fully neutralized, GAP at residual floor.",
+  nva_reduction:"NVA reduction",gap_reduction:"GAP reduction",
+  h_norm:"Norm",h_pct:"CT/pc (s)",h_cap:"pcs/shift",h_eff:"Efficiency",h_vstakt:"vs Takt",
+  scenario_formula:"CT = VA + SP + NVA·(1−nva%) + GAP·(1−gap%) + Prep",
+  export_title:"Export results",
+  exp_pdf:"PDF report",exp_xlsx:"Excel (.xlsx)",exp_csv:"CSV (measurements)",exp_json:"Save session (.json)",
+  exp_pdf_d:"Full report: structure, VA/NVA/SP, GAP, Yamazumi, WIP, norms.",
+  exp_xlsx_d:"All tables on separate sheets.",
+  exp_csv_d:"Every individual measurement per iteration.",
+  exp_json_d:"To resume later or on another device.",
+  exp_done:"Session exported — safe to close.",
+  comments:"Comments / conclusion (for report)",conclusion_ph:"Key findings, agreed actions…",
+  takt_s:"s/pc",sec:"s",pcs:"pcs",over:"over",under:"under",ok:"on takt",
+  confirm:"Confirm",cancel:"Cancel",close:"Close",delete:"Delete",
+  reload_warn:"You have unsaved measurements that weren't exported. Leave the page anyway?",
+  toast_added:"Added",toast_saved:"Saved",toast_loaded:"Session loaded",toast_iter_saved:"Iteration saved",
+  install:"Install app",update_ready:"A new version is available",refresh_now:"Refresh",
+  none:"—",yes:"Yes",no:"No"
+ }
+};
+let LANG = "sr";
+function t(k,vars){let s=(I18N[LANG]&&I18N[LANG][k])||(I18N.sr[k])||k;
+  if(vars)for(const p in vars)s=s.replace(new RegExp("{"+p+"}","g"),vars[p]);return s;}
+
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+function fmt(n,d=1){if(n==null||isNaN(n))return t("none");return Number(n).toLocaleString(LANG==="sr"?"sr-RS":"en-US",{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fmt0(n){return fmt(n,0);}
+function today(){return new Date().toISOString().slice(0,10);}
+function toast(msg){const e=$("#toast");e.textContent=msg;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2200);}
+function fmtTimer(ms){const tot=Math.floor(ms/100);const m=Math.floor(tot/600);const s=Math.floor(tot/10)%60;const dec=tot%10;
+  return (m>0?String(m).padStart(2,"0")+":":"")+String(s).padStart(2,m>0?2:1,"0")+"."+dec;}
+
+/* ---------- state ---------- */
+let S=null, ACTIVE_TAB="home", dirtySinceExport=false;
+function newSession(){return{
+  schemaVersion:1,lang:LANG,id:uid(),
+  meta:{client:"",process:"",location:"",observer:"",date:today(),notes:""},
+  takt:{mode:"direct",directSec:60,availSec:27000,demandQty:450},
+  shiftHours:8,gapResidualPct:5,
+  comments:"",
+  operations:[],
+  createdAt:Date.now(),updatedAt:Date.now()
+};}
+function markDirty(){dirtySinceExport=true;if(S)S.updatedAt=Date.now();scheduleSave();updateHomeStatusBadge();}
+
+/* ---------- IndexedDB autosave ---------- */
+const DB_NAME="tecor_balans",STORE="sessions",AUTO_KEY="__autosave__";
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1);
+  r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE);};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function idbPut(key,val){try{const db=await idb();return new Promise((res,rej)=>{const tx=db.transaction(STORE,"readwrite");
+  tx.objectStore(STORE).put(val,key);tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error);});}catch(e){return false;}}
+async function idbGet(key){try{const db=await idb();return new Promise((res)=>{const tx=db.transaction(STORE,"readonly");
+  const rq=tx.objectStore(STORE).get(key);rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>res(null);});}catch(e){return null;}}
+async function idbDel(key){try{const db=await idb();return new Promise((res)=>{const tx=db.transaction(STORE,"readwrite");
+  tx.objectStore(STORE).delete(key);tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);});}catch(e){return false;}}
+let _saveTimer=null;
+function scheduleSave(){clearTimeout(_saveTimer);_saveTimer=setTimeout(()=>{if(S)idbPut(AUTO_KEY,S);},500);}
+
+/* ---------- ENGINES ---------- */
+function taskStats(task){const vals=(task.iters||[]).filter(v=>v>0);
+  if(!vals.length)return{avg:0,min:0,max:0,n:(task.iters||[]).length,measured:0};
+  const sum=vals.reduce((a,b)=>a+b,0);
+  return{avg:sum/vals.length/1000,min:Math.min(...vals)/1000,max:Math.max(...vals)/1000,n:(task.iters||[]).length,measured:vals.length};}
+function opBreakdown(op){let va=0,sp=0,nva=0;(op.tasks||[]).forEach(tk=>{const a=taskStats(tk).avg;
+  if(tk.category==="VA")va+=a;else if(tk.category==="SP")sp+=a;else nva+=a;});return{va,sp,nva,base:va+sp+nva};}
+function prepPerPiece(op){const p=Number(op.prepPieces)||0;return p>0?(Number(op.prepTotalSec)||0)/p:0;}
+function taktSec(){const T=S.takt;if(T.mode==="direct")return Number(T.directSec)||0;
+  const q=Number(T.demandQty)||0;return q>0?(Number(T.availSec)||0)/q:0;}
+
+/* returns array of {op, va,sp,nva,prep, ct} for given view (regular ops only, prep allocated in combined) */
+function processData(view){
+  const reg=S.operations.filter(o=>o.type==="regular");
+  const rows=reg.map(o=>{const b=opBreakdown(o);return{op:o,va:b.va,sp:b.sp,nva:b.nva,prep:0,ct:b.base};});
+  const byId={};rows.forEach(r=>byId[r.op.id]=r);
+  if(view==="combined"){
+    const order=S.operations;
+    S.operations.filter(o=>o.type==="prep"&&o.prepLink!=="none").forEach(p=>{
+      const idx=order.indexOf(p);let target=null;
+      if(p.prepLink==="prev"){for(let i=idx-1;i>=0;i--)if(order[i].type==="regular"){target=order[i];break;}}
+      else{for(let i=idx+1;i<order.length;i++)if(order[i].type==="regular"){target=order[i];break;}}
+      if(target&&byId[target.id]){const pp=prepPerPiece(p);byId[target.id].prep+=pp;byId[target.id].ct+=pp;}
+    });
+  }
+  return rows;
+}
+function prepData(){return S.operations.filter(o=>o.type==="prep").map(o=>({op:o,ct:prepPerPiece(o),
+  total:Number(o.prepTotalSec)||0,pieces:Number(o.prepPieces)||0}));}
+
+function analysis(view,withNVA){
+  let rows=(view==="prep")?prepData().map(r=>({op:r.op,va:0,sp:0,nva:0,prep:r.ct,ct:r.ct})):processData(view);
+  if(!withNVA)rows=rows.map(r=>({...r,ct:r.ct-r.nva,nva:0}));
+  const cts=rows.map(r=>r.ct).filter(c=>c>0);
+  const bottleneck=cts.length?Math.max(...rows.map(r=>r.ct)):0;
+  const totalWC=rows.reduce((a,r)=>a+r.ct,0);
+  const n=rows.length;
+  const eff=(n&&bottleneck>0)?(totalWC/(n*bottleneck)):0;
+  const balLoss=1-eff;
+  rows.forEach(r=>{r.gap=bottleneck-r.ct;r.rate=r.ct>0?3600/r.ct:0;});
+  return{rows,bottleneck,totalWC,n,eff,balLoss};
+}
+
+/* WIP engine — Little's law */
+function wipData(view){
+  const a=analysis(view,true);const rows=a.rows.filter(r=>r.ct>0);
+  const out=[];const H=Number(S.shiftHours)||8;
+  for(let i=0;i<rows.length-1;i++){
+    const up=rows[i],dn=rows[i+1];
+    const rUp=up.rate,rDn=dn.rate;
+    if(rUp>rDn+1e-9){
+      const acc=rUp-rDn;                 // pcs/h accumulating before downstream
+      const wip=acc*H;                   // pcs over shift
+      const queueH=dn.rate>0?wip/dn.rate:0; // Little's law: time = WIP/throughput
+      out.push({from:up,to:dn,acc,wip,queueMin:queueH*60});
+    }
+  }
+  out.sort((x,y)=>y.wip-x.wip);
+  return out;
+}
+
+/* norms */
+function normRow(view,nvaRed,gapRed){
+  const base=analysis(view,true);
+  const reg=(view==="prep")?prepData().map(r=>({va:0,sp:0,nva:0,prep:r.ct})):processData(view);
+  // recompute each op CT with NVA reduced
+  const cts=reg.map(r=>r.va+r.sp+r.nva*(1-nvaRed)+(r.prep||0));
+  const bn=cts.length?Math.max(...cts):0;
+  const totalWC=cts.reduce((a,b)=>a+b,0);
+  const n=cts.length;
+  const baseBalLoss=base.balLoss; // fraction
+  const effBalLoss=baseBalLoss*(1-gapRed)+(S.gapResidualPct/100)*gapRed; // floor at residual
+  const eff=1-effBalLoss;
+  // line cycle (pace) ~ bottleneck adjusted for remaining balancing loss spread
+  const pace=bn;
+  const H=Number(S.shiftHours)||8;
+  const cap=pace>0?(3600/pace)*H:0;
+  const tk=taktSec();
+  return{pace,cap,eff,bn,totalWC,n,tk};
+}
+
+/* ---------- RENDER ---------- */
+function setTab(tab){ACTIVE_TAB=tab;$$("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));render();window.scrollTo(0,0);}
+function render(){
+  if(!S){renderHome();return;}
+  const m=$("#app");
+  if(ACTIVE_TAB==="home")renderHome();
+  else if(ACTIVE_TAB==="setup")renderSetup();
+  else if(ACTIVE_TAB==="record")renderRecord();
+  else if(ACTIVE_TAB==="analyze")renderAnalyze();
+  else if(ACTIVE_TAB==="export")renderExport();
+  applyStaticI18n();
+}
+function applyStaticI18n(){$$("[data-t]").forEach(e=>{e.textContent=t(e.dataset.t);});
+  document.documentElement.lang=LANG;}
+
+function updateHomeStatusBadge(){/* re-render home badge if visible handled by render */}
+
+/* ----- HOME ----- */
+function renderHome(){
+  const m=$("#app");
+  if(!S){
+    m.innerHTML=`
+    <div class="card">
+      <h2>${t("home_title")}</h2>
+      <p class="muted small">TECOR — Lean &amp; Kaizen consulting</p>
+      <button class="btn wide" id="btnNew">⏱️ ${t("new_session")}</button>
+      <div id="autoBox" class="small muted" style="margin-top:12px"></div>
+      <hr class="sep">
+      <label class="btn ghost wide" style="cursor:pointer">📂 ${t("load_json")}
+        <input type="file" accept=".json,application/json" id="loadJson" class="hide"></label>
+    </div>`;
+    $("#btnNew").onclick=()=>{S=newSession();dirtySinceExport=false;markDirty();setTab("setup");};
+    $("#loadJson").onchange=onLoadJson;
+    idbGet(AUTO_KEY).then(saved=>{if(saved){const box=$("#autoBox");
+      box.innerHTML=`<div class="banner" style="margin-top:4px">⚠️ ${t("autosave_q",{d:new Date(saved.updatedAt).toLocaleString()})}</div>
+      <div class="row"><button class="btn sm" id="resumeBtn">${t("continue")}</button>
+      <button class="btn sm grey" id="discardBtn">${t("discard")}</button></div>`;
+      $("#resumeBtn").onclick=()=>{S=saved;LANG=S.lang||LANG;syncLangButtons();dirtySinceExport=true;setTab("setup");};
+      $("#discardBtn").onclick=async()=>{await idbDel(AUTO_KEY);renderHome();};
+    }});
+    return;
+  }
+  const exported=!dirtySinceExport;
+  m.innerHTML=`
+  <div class="card">
+    <div class="flex-between"><h2>${t("session_info")}</h2>
+      <span class="status ${exported?"ok":"warn"}">${exported?"✓ "+t("saved_ok"):"● "+t("unsaved")}</span></div>
+    <div class="desk-row">
+      <div class="field"><label class="f">${t("client")}</label><input id="m_client" value="${esc(S.meta.client)}"></div>
+      <div class="field"><label class="f">${t("process")}</label><input id="m_process" value="${esc(S.meta.process)}"></div>
+    </div>
+    <div class="desk-row">
+      <div class="field"><label class="f">${t("location")}</label><input id="m_location" value="${esc(S.meta.location)}"></div>
+      <div class="field"><label class="f">${t("observer")}</label><input id="m_observer" value="${esc(S.meta.observer)}"></div>
+      <div class="field"><label class="f">${t("date")}</label><input type="date" id="m_date" value="${esc(S.meta.date)}"></div>
+    </div>
+    <div class="field"><label class="f">${t("notes")}</label><textarea id="m_notes" rows="2">${esc(S.meta.notes)}</textarea></div>
+  </div>
+
+  <div class="card">
+    <h3>${t("params")}</h3>
+    <div class="desk-row">
+      <div class="field"><label class="f">${t("takt_mode")}</label>
+        <select id="t_mode">
+          <option value="direct" ${S.takt.mode==="direct"?"selected":""}>${t("takt_direct")}</option>
+          <option value="calc" ${S.takt.mode==="calc"?"selected":""}>${t("takt_calc")}</option>
+        </select></div>
+      <div id="taktInputs" style="flex:2"></div>
+    </div>
+    <div class="banner" style="background:#eaf2fb;border-color:#bcd6f2;color:#06407c">⏱️ ${t("takt_result",{v:fmt(taktSec())})}</div>
+    <div class="desk-row">
+      <div class="field"><label class="f">${t("shift")}</label><input type="number" id="p_shift" min="0.5" step="0.5" value="${S.shiftHours}"></div>
+      <div class="field"><label class="f">${t("gap_residual")}</label><input type="number" id="p_resid" min="0" max="50" step="1" value="${S.gapResidualPct}"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="btn ghost wide" style="cursor:pointer">📂 ${t("load_json")}
+      <input type="file" accept=".json" id="loadJson2" class="hide"></label>
+  </div>`;
+  // bind meta
+  [["m_client","client"],["m_process","process"],["m_location","location"],["m_observer","observer"],["m_date","date"],["m_notes","notes"]]
+    .forEach(([id,key])=>{$("#"+id).oninput=e=>{S.meta[key]=e.target.value;markDirty();};});
+  $("#p_shift").oninput=e=>{S.shiftHours=Number(e.target.value)||8;markDirty();};
+  $("#p_resid").oninput=e=>{S.gapResidualPct=clamp(Number(e.target.value)||0,0,50);markDirty();};
+  $("#t_mode").onchange=e=>{S.takt.mode=e.target.value;markDirty();renderHome();};
+  renderTaktInputs();
+  $("#loadJson2").onchange=onLoadJson;
+  function renderTaktInputs(){
+    const box=$("#taktInputs");
+    if(S.takt.mode==="direct"){
+      box.innerHTML=`<label class="f">${t("takt_direct")}</label><input type="number" id="t_direct" min="0" step="0.1" value="${S.takt.directSec}">`;
+      $("#t_direct").oninput=e=>{S.takt.directSec=Number(e.target.value)||0;markDirty();$(".banner").innerHTML="⏱️ "+t("takt_result",{v:fmt(taktSec())});};
+    }else{
+      box.innerHTML=`<div class="row">
+        <div><label class="f">${t("avail_time")}</label><input type="number" id="t_avail" min="0" value="${S.takt.availSec}"></div>
+        <div><label class="f">${t("demand")}</label><input type="number" id="t_demand" min="0" value="${S.takt.demandQty}"></div></div>`;
+      $("#t_avail").oninput=e=>{S.takt.availSec=Number(e.target.value)||0;markDirty();$(".banner").innerHTML="⏱️ "+t("takt_result",{v:fmt(taktSec())});};
+      $("#t_demand").oninput=e=>{S.takt.demandQty=Number(e.target.value)||0;markDirty();$(".banner").innerHTML="⏱️ "+t("takt_result",{v:fmt(taktSec())});};
+    }
+  }
+}
+function onLoadJson(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const obj=JSON.parse(r.result);if(!obj.operations)throw 0;S=obj;S.schemaVersion=S.schemaVersion||1;
+    LANG=S.lang||LANG;syncLangButtons();dirtySinceExport=false;toast(t("toast_loaded"));setTab("setup");}
+    catch(err){toast("✗ JSON");}};r.readAsText(f);}
+
+/* ----- SETUP ----- */
+function renderSetup(){
+  const m=$("#app");
+  m.innerHTML=`
+  <div class="card">
+    <div class="flex-between"><h2>${t("operations")}</h2></div>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn sm" id="addReg">${t("add_reg")}</button>
+      <button class="btn sm grey" id="addPrep">${t("add_prep")}</button>
+    </div>
+    <div id="opList"></div>
+  </div>`;
+  $("#addReg").onclick=()=>{S.operations.push({id:uid(),type:"regular",name:"",operator:"",tasks:[{id:uid(),name:"",category:"VA",iters:[]}]});markDirty();renderSetup();};
+  $("#addPrep").onclick=()=>{S.operations.push({id:uid(),type:"prep",name:"",prepTotalSec:0,prepPieces:1,prepLink:"none"});markDirty();renderSetup();};
+  const list=$("#opList");
+  if(!S.operations.length){list.innerHTML=`<div class="empty"><div class="em">🧩</div>${t("no_ops")}</div>`;return;}
+  let seq=0;
+  list.innerHTML=S.operations.map((op)=>{
+    if(op.type==="regular")seq++;
+    const isPrep=op.type==="prep";
+    return `<div class="op ${isPrep?"prep":""}" data-id="${op.id}">
+      <div class="op-head">
+        <span class="seq">${isPrep?"P":seq}</span>
+        <div style="flex:1;min-width:0">
+          <input class="op-name" data-id="${op.id}" placeholder="${t("op_name")}" value="${esc(op.name)}" style="font-weight:700;border:0;padding:4px 0;background:transparent">
+          ${isPrep?`<span class="chip prep">${t("op_prep")}</span>`:`<span class="small muted">${t("op_regular")}</span>`}
+        </div>
+        <button class="iconbtn del-op" data-id="${op.id}" title="${t("delete")}">🗑</button>
+      </div>
+      <div class="op-body">${isPrep?prepBody(op):regBody(op)}</div>
+    </div>`;
+  }).join("");
+  bindSetup();
+}
+function regBody(op){
+  return `<div class="field" style="margin:10px 0"><label class="f">${t("operator")}</label>
+    <input class="op-operator" data-id="${op.id}" value="${esc(op.operator||"")}"></div>
+    <label class="f">${t("tasks")}</label>
+    <div class="tasklist">${(op.tasks||[]).map((tk,i)=>{const st=taskStats(tk);
+      return `<div class="task" data-op="${op.id}" data-task="${tk.id}">
+        <span class="seq" style="width:22px;height:22px;font-size:.72rem;background:var(--grey)">${i+1}</span>
+        <input class="tk-name" placeholder="${t("task_name")}" value="${esc(tk.name)}" style="flex:1">
+        <div class="cat-seg">
+          <button class="cat va ${tk.category==="VA"?"on":""}" data-c="VA">VA</button>
+          <button class="cat sp ${tk.category==="SP"?"on":""}" data-c="SP">SP</button>
+          <button class="cat nva ${tk.category==="NVA"?"on":""}" data-c="NVA">NVA</button>
+        </div>
+        <span class="small muted tnum" style="min-width:74px;text-align:right">${st.measured?fmt(st.avg)+" s · "+st.measured:"0"} </span>
+        <button class="iconbtn del-task" title="${t("delete")}">✕</button>
+      </div>`;}).join("")}</div>
+    <button class="btn sm grey add-task" data-id="${op.id}" style="margin-top:8px" ${(op.tasks||[]).length>=10?"disabled":""}>${t("add_task")}</button>`;
+}
+function prepBody(op){
+  return `<div class="banner" style="margin:10px 0;background:var(--prep-bg);border-color:#cdd6df;color:var(--prep)">${t("rec_prep_info")}</div>
+    <div class="row">
+      <div><label class="f">${t("prep_total")}</label><input type="number" class="pp-total" min="0" step="0.1" value="${op.prepTotalSec||0}"></div>
+      <div><label class="f">${t("prep_pieces")}</label><input type="number" class="pp-pieces" min="1" step="1" value="${op.prepPieces||1}"></div>
+    </div>
+    <div class="field"><label class="f">${t("prep_link")}</label>
+      <select class="pp-link">
+        <option value="none" ${op.prepLink==="none"?"selected":""}>${t("link_none")}</option>
+        <option value="prev" ${op.prepLink==="prev"?"selected":""}>${t("link_prev")}</option>
+        <option value="next" ${op.prepLink==="next"?"selected":""}>${t("link_next")}</option>
+      </select></div>
+    <div class="status ok" style="display:inline-block">${t("prep_per",{v:fmt(prepPerPiece(op))})}</div>`;
+}
+function bindSetup(){
+  $$(".op-name").forEach(el=>el.oninput=e=>{getOp(e.target.dataset.id).name=e.target.value;markDirty();});
+  $$(".op-operator").forEach(el=>el.oninput=e=>{getOp(el.dataset.id).operator=e.target.value;markDirty();});
+  $$(".del-op").forEach(b=>b.onclick=()=>confirmModal(t("del_op_q"),()=>{S.operations=S.operations.filter(o=>o.id!==b.dataset.id);markDirty();renderSetup();}));
+  $$(".add-task").forEach(b=>b.onclick=()=>{const op=getOp(b.dataset.id);if(op.tasks.length>=10){toast(t("max_tasks"));return;}
+    op.tasks.push({id:uid(),name:"",category:"VA",iters:[]});markDirty();renderSetup();});
+  $$(".task").forEach(row=>{
+    const op=getOp(row.dataset.op),tk=op.tasks.find(x=>x.id===row.dataset.task);
+    row.querySelector(".tk-name").oninput=e=>{tk.name=e.target.value;markDirty();};
+    row.querySelectorAll(".cat").forEach(cb=>cb.onclick=()=>{tk.category=cb.dataset.c;markDirty();renderSetup();});
+    row.querySelector(".del-task").onclick=()=>confirmModal(t("del_task_q"),()=>{op.tasks=op.tasks.filter(x=>x.id!==tk.id);markDirty();renderSetup();});
+  });
+  $$(".op").forEach(opEl=>{const op=getOp(opEl.dataset.id);if(op.type!=="prep")return;
+    const tot=opEl.querySelector(".pp-total"),pc=opEl.querySelector(".pp-pieces"),lk=opEl.querySelector(".pp-link");
+    const upd=()=>{op.prepTotalSec=Number(tot.value)||0;op.prepPieces=Number(pc.value)||1;op.prepLink=lk.value;markDirty();
+      opEl.querySelector(".status").textContent=t("prep_per",{v:fmt(prepPerPiece(op))});};
+    tot.oninput=upd;pc.oninput=upd;lk.onchange=()=>{op.prepLink=lk.value;markDirty();};
+  });
+}
+function getOp(id){return S.operations.find(o=>o.id===id);}
+
+/* ----- RECORD ----- */
+let REC={opId:null,taskIdx:0,running:false,startAt:0,raf:null,iterBuf:{}};
+function renderRecord(){
+  const m=$("#app");
+  const regs=S.operations.filter(o=>o.type==="regular"&&o.tasks&&o.tasks.length);
+  if(!regs.length){m.innerHTML=`<div class="card"><div class="empty"><div class="em">⏱️</div>${t("rec_none")}</div></div>`;return;}
+  if(!REC.opId||!regs.find(o=>o.id===REC.opId)){REC.opId=regs[0].id;REC.taskIdx=0;}
+  const op=getOp(REC.opId);
+  m.innerHTML=`
+  <div class="card">
+    <label class="f">${t("rec_pick")}</label>
+    <select id="recOp">${regs.map(o=>`<option value="${o.id}" ${o.id===REC.opId?"selected":""}>${esc(o.name||t("op_regular"))}</option>`).join("")}</select>
+  </div>
+  <div class="card rec-wrap" id="recCard"></div>`;
+  $("#recOp").onchange=e=>{stopTick();REC.opId=e.target.value;REC.taskIdx=0;REC.running=false;renderRecord();};
+  drawRecorder();
+}
+function drawRecorder(){
+  const op=getOp(REC.opId);const tasks=op.tasks;const idx=REC.taskIdx;
+  const card=$("#recCard");
+  const ct=opBreakdown(op).base;
+  const measuredCount=Math.min(...tasks.map(tk=>(tk.iters||[]).filter(v=>v>0).length));
+  const allDone=idx>=tasks.length;
+  const cur=tasks[idx];
+  card.innerHTML=`
+    <div class="rec-progress">${tasks.map((tk,i)=>`<span class="pdot ${i<idx?"done":""} ${i===idx?"active":""}">${i+1}</span>`).join("")}</div>
+    <div class="rec-task">${allDone?"✓ "+t("rec_all_done",{n:(measuredCount)}):esc(cur.name||t("task_name")+" "+(idx+1))}</div>
+    <div class="small muted">${allDone?"":`<span class="chip ${cur.category.toLowerCase()}">${cur.category}</span>`}</div>
+    <div class="rec-timer" id="recTimer">${REC.running?fmtTimer(performance.now()-REC.startAt):"0.0"}</div>
+    ${allDone?
+      `<button class="big-btn start" id="saveIter">✓<span class="sub">${t("rec_save_iter")}</span></button>`
+      :(REC.running?
+        `<button class="big-btn stop" id="stopBtn">${t("stop")}<span class="sub">${esc(cur.name||"")}</span></button>`
+        :`<button class="big-btn start" id="startBtn">${t("start")}<span class="sub">${t("rec_active")}: ${esc(cur.name||(idx+1))}</span></button>`)}
+    <div style="margin-top:16px" class="kpis">
+      <div class="kpi"><div class="v tnum">${fmt(ct)} <span style="font-size:.9rem">s</span></div><div class="l">${t("rec_op_ct")}</div></div>
+      <div class="kpi"><div class="v tnum">${measuredCount}</div><div class="l">${t("iters")}</div></div>
+    </div>
+    <hr class="sep">
+    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>${t("task_name")}</th><th>${t("cat_va")}/${t("cat_sp")}/${t("cat_nva")}</th><th class="num">${t("avg")} (s)</th><th class="num">min</th><th class="num">max</th><th class="num">n</th></tr></thead>
+      <tbody>${tasks.map((tk,i)=>{const st=taskStats(tk);return`<tr><td>${i+1}</td><td>${esc(tk.name||"—")}</td>
+        <td><span class="chip ${tk.category.toLowerCase()}">${tk.category}</span></td>
+        <td class="num">${st.measured?fmt(st.avg):"—"}</td><td class="num">${st.measured?fmt(st.min):"—"}</td>
+        <td class="num">${st.measured?fmt(st.max):"—"}</td><td class="num">${st.measured}</td></tr>`;}).join("")}</tbody></table></div>
+  `;
+  if(allDone){$("#saveIter").onclick=saveIteration;}
+  else if(REC.running){$("#stopBtn").onclick=stopTask;}
+  else{$("#startBtn").onclick=startTask;}
+}
+function startTask(){REC.running=true;REC.startAt=performance.now();tick();drawRecorderButtonsOnly();}
+function drawRecorderButtonsOnly(){drawRecorder();}
+function tick(){const el=$("#recTimer");if(!el||!REC.running){return;}
+  el.textContent=fmtTimer(performance.now()-REC.startAt);REC.raf=requestAnimationFrame(tick);}
+function stopTick(){if(REC.raf)cancelAnimationFrame(REC.raf);REC.raf=null;}
+function stopTask(){if(!REC.running)return;const dur=performance.now()-REC.startAt;REC.running=false;stopTick();
+  const op=getOp(REC.opId);const tk=op.tasks[REC.taskIdx];REC.iterBuf[tk.id]=Math.round(dur);
+  REC.taskIdx++;markDirty();drawRecorder();}
+function saveIteration(){const op=getOp(REC.opId);op.tasks.forEach(tk=>{const v=REC.iterBuf[tk.id]!=null?REC.iterBuf[tk.id]:0;
+  tk.iters=tk.iters||[];tk.iters.push(v);});REC.iterBuf={};REC.taskIdx=0;REC.running=false;markDirty();toast(t("toast_iter_saved"));drawRecorder();}
+
+/* ----- ANALYZE ----- */
+let AN={view:"regular",nva:true,scNva:0.5,scGap:0.5};
+function renderAnalyze(){
+  const m=$("#app");
+  const hasData=S.operations.some(o=>o.type==="regular"&&o.tasks&&o.tasks.some(tk=>(tk.iters||[]).some(v=>v>0)))
+    ||S.operations.some(o=>o.type==="prep"&&prepPerPiece(o)>0);
+  if(!hasData){m.innerHTML=`<div class="card"><div class="empty"><div class="em">📊</div>${t("no_data")}</div></div>`;return;}
+  m.innerHTML=`
+  <div class="card">
+    <div class="flex-between" style="margin-bottom:10px">
+      <div><label class="f">${t("view")}</label>
+        <div class="seg" id="viewSeg">
+          <button data-v="regular" class="${AN.view==="regular"?"on":""}">${t("v_regular")}</button>
+          <button data-v="prep" class="${AN.view==="prep"?"on":""}">${t("v_prep")}</button>
+          <button data-v="combined" class="${AN.view==="combined"?"on":""}">${t("v_combined")}</button>
+        </div></div>
+      <div><label class="f">NVA</label>
+        <div class="seg" id="nvaSeg">
+          <button data-n="1" class="${AN.nva?"on":""}">${t("with_nva")}</button>
+          <button data-n="0" class="${!AN.nva?"on":""}">${t("without_nva")}</button>
+        </div></div>
+    </div>
+    <div id="kpiBox"></div>
+  </div>
+  <div class="card"><h3>${t("yamazumi")}</h3><div id="yamaBox"></div>
+    <div class="legend">
+      <span><span class="dot va-bgc"></span>${t("va_full")}</span>
+      <span><span class="dot sp-bgc"></span>${t("sp_full")}</span>
+      <span><span class="dot nva-bgc"></span>${t("nva_full")}</span>
+      <span><span class="dot prep-bgc"></span>${t("cat_prep")}</span>
+    </div>
+  </div>
+  <div class="card"><h3>${t("op_table")}</h3><div id="opTableBox" class="tbl-wrap"></div></div>
+  <div class="card"><h3>${t("wip_title")}</h3><p class="small muted">${t("wip_intro")}</p><div id="wipBox"></div></div>
+  <div class="card"><h3>${t("bal_title")}</h3><div id="balBox"></div></div>
+  <div class="card"><h3>${t("norms_title")}</h3><div id="normBox"></div></div>`;
+  $$("#viewSeg button").forEach(b=>b.onclick=()=>{AN.view=b.dataset.v;renderAnalyze();});
+  $$("#nvaSeg button").forEach(b=>b.onclick=()=>{AN.nva=b.dataset.n==="1";renderAnalyze();});
+  drawKPIs();drawYamazumi();drawOpTable();drawWIP();drawBalancing();drawNorms();
+}
+function vsTakt(ct){const tk=taktSec();if(!tk)return{cls:"",label:t("none")};
+  if(ct>tk*1.0001)return{cls:"bad",label:t("over")+" "+fmt(ct-tk)+"s"};
+  if(ct>tk*0.9)return{cls:"warn",label:t("ok")};return{cls:"ok",label:t("under")+" "+fmt(tk-ct)+"s"};}
+function drawKPIs(){const a=analysis(AN.view,AN.nva);const tk=taktSec();
+  const cap=a.bottleneck>0?(3600/a.bottleneck)*(Number(S.shiftHours)||8):0;
+  const reqOps=tk>0?Math.ceil(a.totalWC/tk):0;
+  const effCls=a.eff>=0.85?"good":a.eff>=0.7?"warn":"bad";
+  $("#kpiBox").innerHTML=`<div class="kpis">
+    <div class="kpi ${vsTakt(a.bottleneck).cls==="bad"?"bad":"good"}"><div class="v tnum">${fmt(a.bottleneck)} s</div><div class="l">${t("process_ct")}</div></div>
+    <div class="kpi ${effCls}"><div class="v tnum">${fmt(a.eff*100)}%</div><div class="l">${t("line_eff")}</div></div>
+    <div class="kpi"><div class="v tnum">${fmt(a.totalWC)} s</div><div class="l">${t("total_wc")}</div></div>
+    <div class="kpi bad"><div class="v tnum">${fmt(a.balLoss*100)}%</div><div class="l">${t("balance_loss")}</div></div>
+    <div class="kpi"><div class="v tnum">${fmt0(cap)}</div><div class="l">${t("throughput")}</div></div>
+    <div class="kpi"><div class="v tnum">${reqOps||"—"}</div><div class="l">${t("req_ops")}</div></div>
+  </div>`;
+}
+function drawYamazumi(){const a=analysis(AN.view,AN.nva);const box=$("#yamaBox");
+  if(!a.rows.length){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;return;}
+  const tk=taktSec();const maxV=Math.max(a.bottleneck,tk||0)*1.12||1;const H=200;
+  const segs=r=>[["va",r.va],["sp",r.sp],["nva",r.nva],["prep",r.prep]].filter(s=>s[1]>0.001);
+  box.innerHTML=`<div class="yama" style="position:relative">
+    ${tk?`<div style="position:absolute;left:0;right:0;border-top:2px dashed var(--blue-l);bottom:${28+(tk/maxV)*H}px;z-index:2">
+      <span style="position:absolute;right:0;top:-16px;font-size:.7rem;font-weight:700;color:var(--blue-l);background:#fff;padding:0 4px">${t("takt_line")} ${fmt(tk)}s</span></div>`:""}
+    ${a.rows.map(r=>{const h=(r.ct/maxV)*H;const isBN=Math.abs(r.ct-a.bottleneck)<1e-6&&r.ct>0;
+      return `<div class="ycol">
+        <div class="yct ${isBN?"nva-c":""}">${fmt(r.ct)}s</div>
+        <div class="ybar" style="height:${Math.max(h,2)}px">
+          ${segs(r).map(([c,v])=>`<div class="yseg ${c}-bgc" style="height:${(v/r.ct)*100}%" title="${c.toUpperCase()} ${fmt(v)}s"></div>`).join("")}
+        </div>
+        <div class="ylabel">${esc(r.op.name||"—")}${isBN?` <span class="tag" style="background:var(--nva)">BN</span>`:""}</div>
+      </div>`;}).join("")}
+  </div>`;
+}
+function drawOpTable(){const a=analysis(AN.view,AN.nva);const box=$("#opTableBox");
+  box.innerHTML=`<table><thead><tr><th>${t("h_op")}</th><th>${t("h_oper")}</th><th class="num">${t("h_va")}</th><th class="num">${t("h_sp")}</th>
+    <th class="num">${t("h_nva")}</th><th class="num">${t("h_prep")}</th><th class="num">${t("h_ct")}</th><th class="num">${t("h_rate")}</th>
+    <th class="num">${t("h_gap")}</th><th>${t("h_takt")}</th></tr></thead><tbody>
+    ${a.rows.map(r=>{const isBN=Math.abs(r.ct-a.bottleneck)<1e-6;const vt=vsTakt(r.ct);
+      return `<tr class="${isBN?"bottleneck":""}"><td>${esc(r.op.name||"—")}</td><td class="small muted">${esc(r.op.operator||"—")}</td>
+      <td class="num va-c">${fmt(r.va)}</td><td class="num sp-c">${fmt(r.sp)}</td><td class="num nva-c">${fmt(r.nva)}</td>
+      <td class="num" style="color:var(--prep)">${fmt(r.prep)}</td><td class="num"><b>${fmt(r.ct)}</b></td>
+      <td class="num">${fmt0(r.rate)}</td><td class="num">${fmt(r.gap)}</td>
+      <td><span class="status ${vt.cls}">${vt.label}</span></td></tr>`;}).join("")}</tbody></table>`;
+}
+function drawWIP(){const w=wipData(AN.view==="prep"?"regular":AN.view);const box=$("#wipBox");
+  if(!w.length){box.innerHTML=`<p class="muted small">${t("no_wip")}</p>`;return;}
+  box.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>${t("h_pair")}</th><th class="num">${t("h_acc")}</th>
+    <th class="num">${t("h_wip")}</th><th class="num">${t("h_queue")}</th></tr></thead><tbody>
+    ${w.map((r,i)=>`<tr class="${i===0?"bottleneck":""}"><td>${esc(r.from.op.name||"?")} → ${esc(r.to.op.name||"?")}
+      ${i===0?`<span class="tag" style="background:var(--nva)">${t("wip_worst")}</span>`:""}</td>
+      <td class="num">${fmt0(r.acc)}</td><td class="num"><b>${fmt0(r.wip)}</b></td><td class="num">${fmt0(r.queueMin)} min</td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+function drawBalancing(){const a=analysis(AN.view,AN.nva);const box=$("#balBox");const tk=taktSec();
+  const tips=[];const bn=a.rows.reduce((m,r)=>r.ct>m.ct?r:m,{ct:0,op:{name:""}});
+  if(bn.ct>0)tips.push(`🔴 ${t("bal_bottleneck",{op:bn.op.name||"—",ct:fmt(bn.ct)})}`);
+  a.rows.forEach(r=>{if(tk&&r.ct>tk*1.0001)tips.push(`🔴 ${t("bal_over_takt",{op:r.op.name||"—",ct:fmt(r.ct),takt:fmt(tk)})}`);});
+  a.rows.forEach(r=>{const gap=bn.ct-r.ct;if(gap>bn.ct*0.15&&r.ct>0)tips.push(`🟡 ${t("bal_under",{op:r.op.name||"—",ct:fmt(r.ct),gap:fmt(gap)})}`);});
+  a.rows.forEach(r=>{if(r.nva>0.5)tips.push(`🟢 ${t("bal_nva_tip",{op:r.op.name||"—",nva:fmt(r.nva),res:fmt(r.ct-r.nva*0.5)})}`);});
+  if(a.eff>=0.85)tips.unshift(`✅ ${t("bal_balanced",{eff:fmt(a.eff*100)})}`);
+  box.innerHTML=`<ul style="margin:0;padding-left:2px;list-style:none">${tips.map(x=>`<li style="padding:6px 0;border-bottom:1px dashed var(--line)">${x}</li>`).join("")}</ul>`;
+}
+function drawNorms(){const box=$("#normBox");
+  const asis=normRow(AN.view,0,0);
+  const best=normRow(AN.view,1,1);
+  const sc=normRow(AN.view,AN.scNva,AN.scGap);
+  const tk=taktSec();
+  const tline=(label,n,extra)=>{const vt=vsTakt(n.pace);
+    return `<tr ${extra||""}><td><b>${label}</b></td><td class="num">${fmt(n.pace)}</td><td class="num">${fmt0(n.cap)}</td>
+    <td class="num">${fmt(n.eff*100)}%</td><td><span class="status ${vt.cls}">${vt.label}</span></td></tr>`;};
+  box.innerHTML=`
+    <div class="small muted" style="margin-bottom:8px">${t("scenario_formula")}</div>
+    <div class="tbl-wrap"><table><thead><tr><th>${t("h_norm")}</th><th class="num">${t("h_pct")}</th><th class="num">${t("h_cap")}</th>
+      <th class="num">${t("h_eff")}</th><th>${t("h_vstakt")}</th></tr></thead><tbody>
+      ${tline(t("norm_asis"),asis)}
+      ${tline(t("norm_scenario"),sc,'style="background:#eaf2fb"')}
+      ${tline(t("norm_best"),best)}
+    </tbody></table></div>
+    <div style="margin-top:12px">
+      <label class="f">${t("nva_reduction")}: <b>${fmt0(AN.scNva*100)}%</b></label>
+      <div class="sl" id="slNva">${[0.1,0.2,0.5,0.7,1].map(v=>`<button data-v="${v}" class="${Math.abs(AN.scNva-v)<1e-6?"on":""}">${v*100}%</button>`).join("")}</div>
+      <label class="f">${t("gap_reduction")}: <b>${fmt0(AN.scGap*100)}%</b></label>
+      <div class="sl" id="slGap">${[0.1,0.2,0.5,0.7,1].map(v=>`<button data-v="${v}" class="${Math.abs(AN.scGap-v)<1e-6?"on":""}">${v*100}%</button>`).join("")}</div>
+    </div>
+    <p class="small muted" style="margin-top:6px">${t("norm_asis")}: ${t("norm_asis_d")} · ${t("norm_best")}: ${t("norm_best_d")}</p>`;
+  $$("#slNva button").forEach(b=>b.onclick=()=>{AN.scNva=Number(b.dataset.v);drawNorms();});
+  $$("#slGap button").forEach(b=>b.onclick=()=>{AN.scGap=Number(b.dataset.v);drawNorms();});
+}
+
+/* ----- EXPORT ----- */
+function renderExport(){
+  const m=$("#app");
+  m.innerHTML=`
+  <div class="card">
+    <div class="field"><label class="f">${t("comments")}</label>
+      <textarea id="exComments" rows="3" placeholder="${t("conclusion_ph")}">${esc(S.comments||"")}</textarea></div>
+  </div>
+  <div class="card">
+    <h2>${t("export_title")}</h2>
+    <div class="exp-item" style="margin-bottom:10px">
+      <button class="btn wide" id="expPdf">📄 ${t("exp_pdf")}</button>
+      <p class="small muted" style="margin:6px 2px 0">${t("exp_pdf_d")}</p></div>
+    <div class="exp-item" style="margin-bottom:10px">
+      <button class="btn ghost wide" id="expXlsx">📊 ${t("exp_xlsx")}</button>
+      <p class="small muted" style="margin:6px 2px 0">${t("exp_xlsx_d")}</p></div>
+    <div class="exp-item" style="margin-bottom:10px">
+      <button class="btn ghost wide" id="expCsv">📋 ${t("exp_csv")}</button>
+      <p class="small muted" style="margin:6px 2px 0">${t("exp_csv_d")}</p></div>
+    <hr class="sep">
+    <div class="exp-item">
+      <button class="btn grey wide" id="expJson">💾 ${t("exp_json")}</button>
+      <p class="small muted" style="margin:6px 2px 0">${t("exp_json_d")}</p></div>
+  </div>`;
+  $("#exComments").oninput=e=>{S.comments=e.target.value;markDirty();};
+  $("#expPdf").onclick=exportPDF;
+  $("#expXlsx").onclick=exportXLSX;
+  $("#expCsv").onclick=exportCSV;
+  $("#expJson").onclick=exportJSON;
+}
+function fileBase(){const p=(S.meta.process||"proces").replace(/[^\w\u00C0-\u017F-]+/g,"_");return `TECOR_${p}_${S.meta.date||today()}`;}
+function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(u),3000);dirtySinceExport=false;updateExportedState();}
+function updateExportedState(){toast(t("exp_done"));}
+
+function exportJSON(){S.lang=LANG;dl(new Blob([JSON.stringify(S,null,2)],{type:"application/json"}),fileBase()+".json");}
+
+function exportCSV(){
+  const rows=[["Operacija/Operation","Tip/Type","Operater/Operator","Zahvat/Task","Kategorija/Category","Iteracija/Iteration","Vreme_s/Time_s"]];
+  S.operations.forEach((op,oi)=>{
+    if(op.type==="prep"){rows.push([op.name,"prep","",`prep/${op.prepPieces}kom`,"PREP","1",fmt(prepPerPiece(op))]);return;}
+    op.tasks.forEach(tk=>{(tk.iters||[]).forEach((v,i)=>{rows.push([op.name,"regular",op.operator||"",tk.name,tk.category,i+1,fmt(v/1000)]);});});
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+  dl(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),fileBase()+".csv");
+}
+
+function exportXLSX(){
+  const wb=XLSX.utils.book_new();
+  // Info
+  const info=[["TECOR — Balansiranje operacija"],[],
+    [t("client"),S.meta.client],[t("process"),S.meta.process],[t("location"),S.meta.location],
+    [t("observer"),S.meta.observer],[t("date"),S.meta.date],[t("takt_time")+" (s)",fmt(taktSec())],
+    [t("shift"),S.shiftHours],[t("gap_residual"),S.gapResidualPct]];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(info),"Info");
+  // Measurements
+  const meas=[["Operacija","Operater","Zahvat","Kategorija","Iteracija","Vreme_s"]];
+  S.operations.filter(o=>o.type==="regular").forEach(op=>op.tasks.forEach(tk=>(tk.iters||[]).forEach((v,i)=>
+    meas.push([op.name,op.operator||"",tk.name,tk.category,i+1,Number((v/1000).toFixed(2))]))));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(meas),"Merenja");
+  // Tasks summary
+  const ts=[["Operacija","Zahvat","Kategorija","Avg_s","Min_s","Max_s","n"]];
+  S.operations.filter(o=>o.type==="regular").forEach(op=>op.tasks.forEach(tk=>{const st=taskStats(tk);
+    ts.push([op.name,tk.name,tk.category,Number(st.avg.toFixed(2)),Number(st.min.toFixed(2)),Number(st.max.toFixed(2)),st.measured]);}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ts),"Zahvati");
+  // Operations per view
+  ["regular","combined"].forEach(view=>{const a=analysis(view,true);
+    const os=[["Operacija","Operater","VA_s","SP_s","NVA_s","Prep_s","CT_s","kom/h","GAP_vs_BN_s"]];
+    a.rows.forEach(r=>os.push([r.op.name,r.op.operator||"",f2(r.va),f2(r.sp),f2(r.nva),f2(r.prep),f2(r.ct),Math.round(r.rate),f2(r.gap)]));
+    os.push([]);os.push(["Bottleneck_s",f2(a.bottleneck)],["Efikasnost_%",f2(a.eff*100)],["Balansni_gubitak_%",f2(a.balLoss*100)]);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(os),view==="regular"?"Operacije_redovne":"Operacije_kombin");});
+  // Prep
+  const pr=[["Operacija","Ukupno_s","Komada","Po_komadu_s","Alokacija"]];
+  S.operations.filter(o=>o.type==="prep").forEach(op=>pr.push([op.name,Number(op.prepTotalSec)||0,Number(op.prepPieces)||0,f2(prepPerPiece(op)),op.prepLink]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(pr),"Pripremne");
+  // WIP
+  const w=wipData("combined");const ws=[["Od","Do","Gomilanje_kom/h","WIP_smena_kom","Queue_min"]];
+  w.forEach(r=>ws.push([r.from.op.name,r.to.op.name,Math.round(r.acc),Math.round(r.wip),Math.round(r.queueMin)]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws),"WIP");
+  // Norms
+  const nr=[["Norma","CT_kom_s","kom_smena","Efikasnost_%"]];
+  [["As-is",0,0],["Scenario",AN.scNva,AN.scGap],["Best case",1,1]].forEach(([lbl,nv,gp])=>{
+    const n=normRow("combined",nv,gp);nr.push([lbl,f2(n.pace),Math.round(n.cap),f2(n.eff*100)]);});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(nr),"Norme");
+  XLSX.writeFile(wb,fileBase()+".xlsx");dirtySinceExport=false;updateExportedState();
+}
+function f2(n){return Number((n||0).toFixed(2));}
+
+async function loadImageData(url){try{const r=await fetch(url);const b=await r.blob();
+  return await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b);});}catch(e){return null;}}
+
+async function exportPDF(){
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"pt",format:"a4"});
+  const W=doc.internal.pageSize.getWidth();const ML=40;let y=40;
+  const C={blue:[5,61,120],grey:[120,130,140],va:[46,125,50],sp:[230,81,0],nva:[198,40,40],prep:[84,98,115],line:[221,227,232]};
+  const logo=await loadImageData("assets/logo.png");
+  if(logo){try{doc.addImage(logo,"PNG",ML,y,150,34);}catch(e){}}
+  doc.setFontSize(9).setTextColor(120);doc.text(new Date().toLocaleString(),W-ML,y+12,{align:"right"});
+  y+=54;
+  doc.setTextColor(...C.blue).setFontSize(17).setFont(undefined,"bold");
+  doc.text(t("app_title"),ML,y);y+=8;
+  doc.setDrawColor(...C.blue).setLineWidth(2).line(ML,y,W-ML,y);y+=18;
+  // meta
+  doc.setFont(undefined,"normal").setFontSize(10).setTextColor(40);
+  const meta=[[t("client"),S.meta.client||"—",t("process"),S.meta.process||"—"],
+    [t("location"),S.meta.location||"—",t("observer"),S.meta.observer||"—"],
+    [t("date"),S.meta.date||"—",t("takt_time"),fmt(taktSec())+" "+t("takt_s")]];
+  doc.autoTable({startY:y,body:meta,theme:"plain",styles:{fontSize:9,cellPadding:2},
+    columnStyles:{0:{fontStyle:"bold",textColor:C.blue},2:{fontStyle:"bold",textColor:C.blue}},margin:{left:ML,right:ML}});
+  y=doc.lastAutoTable.finalY+16;
+
+  const a=analysis("combined",true);
+  // KPI line
+  const cap=a.bottleneck>0?(3600/a.bottleneck)*(Number(S.shiftHours)||8):0;
+  doc.setFontSize(11).setFont(undefined,"bold").setTextColor(...C.blue);doc.text(t("op_table")+" — "+t("v_combined"),ML,y);y+=6;
+  doc.autoTable({startY:y,head:[[t("h_op"),t("h_oper"),t("h_va"),t("h_sp"),t("h_nva"),t("h_prep"),t("h_ct"),t("h_rate"),t("h_gap")]],
+    body:a.rows.map(r=>[r.op.name||"—",r.op.operator||"—",fmt(r.va),fmt(r.sp),fmt(r.nva),fmt(r.prep),fmt(r.ct),fmt0(r.rate),fmt(r.gap)]),
+    foot:[[{content:`${t("bottleneck")}: ${fmt(a.bottleneck)} s · ${t("line_eff")}: ${fmt(a.eff*100)}% · ${t("balance_loss")}: ${fmt(a.balLoss*100)}% · ${t("throughput")}: ${fmt0(cap)}`,colSpan:9}]],
+    headStyles:{fillColor:C.blue,fontSize:8},footStyles:{fillColor:[240,243,246],textColor:40,fontSize:8},
+    styles:{fontSize:8,cellPadding:3},margin:{left:ML,right:ML},
+    didParseCell:d=>{if(d.section==="body"){const r=a.rows[d.row.index];if(Math.abs(r.ct-a.bottleneck)<1e-6)d.cell.styles.fillColor=[255,240,238];}}});
+  y=doc.lastAutoTable.finalY+18;
+
+  // Yamazumi (vector)
+  if(y>620){doc.addPage();y=40;}
+  doc.setFontSize(11).setFont(undefined,"bold").setTextColor(...C.blue);doc.text(t("yamazumi"),ML,y);y+=10;
+  const chartH=150,baseY=y+chartH,chartW=W-ML*2;const tk=taktSec();
+  const maxV=Math.max(a.bottleneck,tk||0)*1.12||1;const n=a.rows.length;const bw=Math.min(46,(chartW/Math.max(n,1))-12);
+  a.rows.forEach((r,i)=>{const x=ML+i*(chartW/Math.max(n,1))+ (chartW/Math.max(n,1)-bw)/2;let yy=baseY;
+    [["va",r.va,C.va],["sp",r.sp,C.sp],["nva",r.nva,C.nva],["prep",r.prep,C.prep]].forEach(([k,v,col])=>{if(v<=0.001)return;
+      const h=(v/maxV)*chartH;doc.setFillColor(...col);doc.rect(x,yy-h,bw,h,"F");yy-=h;});
+    doc.setFontSize(7).setTextColor(40);doc.text(fmt(r.ct)+"s",x+bw/2,baseY-(r.ct/maxV)*chartH-3,{align:"center"});
+    doc.setTextColor(90);doc.text((r.op.name||"—").slice(0,12),x+bw/2,baseY+10,{align:"center"});});
+  if(tk){const ty=baseY-(tk/maxV)*chartH;doc.setDrawColor(...C.blue).setLineWidth(1).setLineDashPattern([3,2],0).line(ML,ty,W-ML,ty);
+    doc.setLineDashPattern([],0);doc.setFontSize(7).setTextColor(...C.blue);doc.text("Takt "+fmt(tk)+"s",W-ML,ty-3,{align:"right"});}
+  y=baseY+24;
+
+  // WIP
+  const w=wipData("combined");
+  if(w.length){if(y>660){doc.addPage();y=40;}
+    doc.setFontSize(11).setFont(undefined,"bold").setTextColor(...C.blue);doc.text(t("wip_title"),ML,y);y+=6;
+    doc.autoTable({startY:y,head:[[t("h_pair"),t("h_acc"),t("h_wip"),t("h_queue")+" (min)"]],
+      body:w.map(r=>[(r.from.op.name||"?")+" → "+(r.to.op.name||"?"),fmt0(r.acc),fmt0(r.wip),fmt0(r.queueMin)]),
+      headStyles:{fillColor:C.blue,fontSize:8},styles:{fontSize:8,cellPadding:3},margin:{left:ML,right:ML}});
+    y=doc.lastAutoTable.finalY+18;}
+
+  // Norms
+  if(y>640){doc.addPage();y=40;}
+  doc.setFontSize(11).setFont(undefined,"bold").setTextColor(...C.blue);doc.text(t("norms_title"),ML,y);y+=6;
+  const nrows=[["As-is",0,0],["Scenario "+(AN.scNva*100)+"%",AN.scNva,AN.scGap],["Best case",1,1]].map(([lbl,nv,gp])=>{
+    const nn=normRow("combined",nv,gp);return [lbl,fmt(nn.pace),fmt0(nn.cap),fmt(nn.eff*100)+"%"];});
+  doc.autoTable({startY:y,head:[[t("h_norm"),t("h_pct"),t("h_cap"),t("h_eff")]],body:nrows,
+    headStyles:{fillColor:C.blue,fontSize:8},styles:{fontSize:8,cellPadding:3},margin:{left:ML,right:ML}});
+  y=doc.lastAutoTable.finalY+16;
+
+  // Comments
+  if(S.comments){if(y>700){doc.addPage();y=40;}
+    doc.setFontSize(11).setFont(undefined,"bold").setTextColor(...C.blue);doc.text(t("comments"),ML,y);y+=14;
+    doc.setFont(undefined,"normal").setFontSize(9).setTextColor(40);
+    doc.text(doc.splitTextToSize(S.comments,W-ML*2),ML,y);}
+
+  // footer page numbers
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(8).setTextColor(150);
+    doc.text("TECOR — Lean & Kaizen consulting",ML,doc.internal.pageSize.getHeight()-20);
+    doc.text(i+"/"+pages,W-ML,doc.internal.pageSize.getHeight()-20,{align:"right"});}
+  doc.save(fileBase()+".pdf");dirtySinceExport=false;updateExportedState();
+}
+
+/* ---------- modal ---------- */
+function confirmModal(msg,onYes){const bg=$("#modalbg");
+  $("#modal").innerHTML=`<h3>${esc(msg)}</h3><div class="row" style="margin-top:16px">
+    <button class="btn danger" id="cmYes">${t("delete")}</button><button class="btn grey" id="cmNo">${t("cancel")}</button></div>`;
+  bg.classList.add("show");$("#cmYes").onclick=()=>{bg.classList.remove("show");onYes();};
+  $("#cmNo").onclick=()=>bg.classList.remove("show");}
+
+/* ---------- lang ---------- */
+function syncLangButtons(){$$("#lang button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));}
+$$("#lang button").forEach(b=>b.onclick=()=>{LANG=b.dataset.l;if(S)S.lang=LANG;syncLangButtons();render();});
+
+/* ---------- nav ---------- */
+$$("#tabs button").forEach(b=>b.onclick=()=>{if(!S&&b.dataset.tab!=="home"){toast(t("new_session"));return;}stopTick();setTab(b.dataset.tab);});
+
+/* ---------- guard ---------- */
+window.addEventListener("beforeunload",e=>{if(dirtySinceExport&&S&&S.operations.length){e.preventDefault();e.returnValue=t("reload_warn");return t("reload_warn");}});
+
+/* ---------- PWA ---------- */
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").then(reg=>{
+  reg.addEventListener("updatefound",()=>{const nw=reg.installing;nw&&nw.addEventListener("statechange",()=>{
+    if(nw.state==="installed"&&navigator.serviceWorker.controller){const e=$("#toast");
+      e.innerHTML=t("update_ready")+' <button class="btn sm" style="margin-left:8px;padding:3px 8px" onclick="location.reload()">'+t("refresh_now")+'</button>';
+      e.classList.add("show");}});});}).catch(()=>{});});}
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;});
+
+/* ---------- boot ---------- */
+setTab("home");
+applyStaticI18n();
+</script>
+</body>
+</html>

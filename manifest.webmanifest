@@ -1,0 +1,17 @@
+{
+  "name": "TECOR — Balansiranje operacija",
+  "short_name": "TECOR Balans",
+  "description": "Lean time-study, balansiranje operacija, WIP i norme za pod.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#053D78",
+  "theme_color": "#053D78",
+  "lang": "sr",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
