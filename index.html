@@ -194,6 +194,23 @@ tr.hl td{background:rgba(255,107,107,.08)}
 .modal{background:var(--surface);border:1px solid var(--line);border-radius:18px;max-width:440px;width:100%;padding:22px;box-shadow:var(--sh)}
 .addrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.addrow .btn{flex:1}
 @media(max-width:560px){main{padding:12px}.card{padding:14px}.op-head{padding:11px 12px;gap:9px}.op-body{padding:0 12px 13px}.kpi{padding:12px 13px}.rec-stage{padding:18px 14px}}
+.flex-between{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.rec-stage{position:sticky;top:56px;z-index:20}
+.rec-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.rec-actions .btn{box-shadow:none}
+.btn.glass{background:rgba(255,255,255,.16);color:#fff}
+.btn.glass:hover{background:rgba(255,255,255,.28)}
+.rectask{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:9px;background:rgba(255,255,255,.025);transition:.15s}
+.rectask.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.rectask .ss{width:94px;height:48px;border-radius:12px;border:0;font-weight:850;color:#fff;cursor:pointer;flex:none;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:6px}
+.ss.start{background:linear-gradient(135deg,#2bb46a,#33cc7a);color:#06250f}
+.ss.stop{background:linear-gradient(135deg,#e0524f,#ff6b6b);animation:pulse 1.3s infinite}
+.rectask .rt-nm{flex:1;min-width:0}
+.rectask .rt-meas{font-weight:850;font-variant-numeric:tabular-nums;min-width:54px;text-align:right;color:#fff}
+.thandle{color:var(--faint);cursor:grab;touch-action:none;padding:2px;display:flex;align-items:center}
+.thandle:active{cursor:grabbing}
+.idx2{font-size:.74rem;font-weight:800;color:var(--faint);min-width:16px;text-align:center}
+.dragging{opacity:.45}
 </style>
 </head>
 <body>
@@ -228,7 +245,10 @@ const ICONS={
  doc:'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4"/>',sheet:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16"/>',
  save:'<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>',
  install:'<path d="M12 4v10M8 10l4 4 4-4M5 20h14"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
- clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ up:'<path d="M12 19V5M6 11l6-6 6 6"/>',down:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+ drag:'<path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/>',
+ edit:'<path d="M4 20h4l11-11-4-4L4 16z"/>',comment:'<path d="M4 5h16v11H9l-4 3z"/>'
 };
 const ic=(n,c)=>`<svg viewBox="0 0 24 24" class="ic ${c||''}">${ICONS[n]||''}</svg>`;
 
@@ -268,7 +288,12 @@ const I18N={sr:{
  e_pdf:"PDF izveštaj",e_xlsx:"Excel (.xlsx)",e_csv:"CSV merenja",e_json:"Sačuvaj sesiju (.json)",exp_ok:"Izvezeno — bezbedno je zatvoriti.",
  sec:"s",min:"min",pcs:"kom",over:"iznad",under:"ispod",ok:"u taktu",none:"—",
  del:"Obriši",cancel:"Odustani",reload_warn:"Imaš merenja koja nisu izvezena. Napustiti stranicu?",
- t_loaded:"Sesija učitana",t_iter:"Ciklus sačuvan",update_ready:"Nova verzija je spremna",refresh:"Osveži"
+ t_loaded:"Sesija učitana",t_iter:"Ciklus sačuvan",update_ready:"Nova verzija je spremna",refresh:"Osveži",
+ finish_cycle:"Završi ciklus",cancel_cycle:"Poništi ciklus",rec_ready:"Pokreni neki zahvat",cycles_done:"ciklusa",
+ pieces_q:"Broj komada (ovaj ciklus)",pieces_short:"kom",op_comment:"Komentar operacije",task_comment:"Komentar zahvata",
+ add_comment:"Dodaj komentar…",link_to:"Vezati za",prep_pieces_fb:"Komada (procena)",
+ reorder_hint:"Prevuci ⠿ ili koristi strelice za redosled.",edit:"Izmeni zahvat",save_x:"Sačuvaj",t_cancel:"Ciklus poništen",
+ prep_meas_info:"Pripremna se meri kao redovna; broj komada uneseš pri svakom ciklusu. Može imati zahvate ili samo jedan."
 },en:{
  "nav.home":"Session","nav.setup":"Setup","nav.record":"Record","nav.analyze":"Analyze","nav.export":"Export",
  va_full:"Value-adding (VA)",sp_full:"Support (SP)",nva_full:"Non-value-adding (NVA)",prep_full:"Preparation",
@@ -304,7 +329,12 @@ const I18N={sr:{
  e_pdf:"PDF report",e_xlsx:"Excel (.xlsx)",e_csv:"CSV measurements",e_json:"Save session (.json)",exp_ok:"Exported — safe to close.",
  sec:"s",min:"min",pcs:"pcs",over:"over",under:"under",ok:"on takt",none:"—",
  del:"Delete",cancel:"Cancel",reload_warn:"You have measurements that weren't exported. Leave the page?",
- t_loaded:"Session loaded",t_iter:"Cycle saved",update_ready:"New version ready",refresh:"Refresh"
+ t_loaded:"Session loaded",t_iter:"Cycle saved",update_ready:"New version ready",refresh:"Refresh",
+ finish_cycle:"Finish cycle",cancel_cycle:"Cancel cycle",rec_ready:"Start a task",cycles_done:"cycles",
+ pieces_q:"Pieces (this cycle)",pieces_short:"pcs",op_comment:"Operation comment",task_comment:"Task comment",
+ add_comment:"Add comment…",link_to:"Allocate to",prep_pieces_fb:"Pieces (estimate)",
+ reorder_hint:"Drag ⠿ or use arrows to reorder.",edit:"Edit task",save_x:"Save",t_cancel:"Cycle canceled",
+ prep_meas_info:"Preparatory is timed like regular; enter the piece count at each cycle. It may have tasks or just one."
 }};
 let LANG="sr";
 function t(k,v){let s=(I18N[LANG]&&I18N[LANG][k])||I18N.sr[k]||k;if(v)for(const p in v)s=s.replace(new RegExp("{"+p+"}","g"),v[p]);return s;}
@@ -346,17 +376,16 @@ let _sv;function save(){clearTimeout(_sv);_sv=setTimeout(()=>{if(S)dbPut(AK,S);}
 function taskStats(tk){const v=(tk.iters||[]).filter(x=>x>0);if(!v.length)return{avg:0,min:0,max:0,n:(tk.iters||[]).length,measured:0};
   const sum=v.reduce((a,b)=>a+b,0);return{avg:sum/v.length/1000,min:Math.min(...v)/1000,max:Math.max(...v)/1000,n:(tk.iters||[]).length,measured:v.length};}
 function opBreakdown(op){let va=0,sp=0,nva=0;(op.tasks||[]).forEach(tk=>{const a=taskStats(tk).avg;if(tk.category==="VA")va+=a;else if(tk.category==="SP")sp+=a;else nva+=a;});return{va,sp,nva,base:va+sp+nva};}
-function prepPerPiece(op){const p=Number(op.prepPieces)||0;return p>0?(Number(op.prepTotalSec)||0)/p:0;}
+function prepAvgPieces(op){const v=(op.pieceMeas||[]).filter(x=>x>0);if(v.length)return v.reduce((a,b)=>a+b,0)/v.length;return Number(op.prepPiecesFb)||Number(op.prepPieces)||0;}
+function prepPerPiece(op){const p=prepAvgPieces(op);const d=opBreakdown(op).base;return p>0?d/p:0;}
 function taktSec(){const T=S.takt;if(T.mode==="direct")return Number(T.directSec)||0;const q=Number(T.demandQty)||0;return q>0?((Number(T.availMin)||0)*60)/q:0;}
 function processData(view){
   const reg=S.operations.filter(o=>o.type==="regular");
   const rows=reg.map(o=>{const b=opBreakdown(o);return{op:o,va:b.va,sp:b.sp,nva:b.nva,prep:0,ct:b.base};});
   const byId={};rows.forEach(r=>byId[r.op.id]=r);
-  if(view==="combined"){const order=S.operations;
-    S.operations.filter(o=>o.type==="prep"&&o.prepLink&&o.prepLink!=="none").forEach(p=>{const idx=order.indexOf(p);let tgt=null;
-      if(p.prepLink==="prev"){for(let i=idx-1;i>=0;i--)if(order[i].type==="regular"){tgt=order[i];break;}}
-      else{for(let i=idx+1;i<order.length;i++)if(order[i].type==="regular"){tgt=order[i];break;}}
-      if(tgt&&byId[tgt.id]){const pp=prepPerPiece(p);byId[tgt.id].prep+=pp;byId[tgt.id].ct+=pp;}});}
+  if(view==="combined"){
+    S.operations.filter(o=>o.type==="prep"&&o.linkTo&&o.linkTo!=="none").forEach(p=>{
+      const tgt=byId[p.linkTo];if(tgt){const pp=prepPerPiece(p);tgt.prep+=pp;tgt.ct+=pp;}});}
   return rows;
 }
 function prepData(){return S.operations.filter(o=>o.type==="prep").map(o=>({op:o,va:0,sp:0,nva:0,prep:prepPerPiece(o),ct:prepPerPiece(o)}));}
@@ -399,7 +428,7 @@ function renderHome(){const m=$("#app");
     $("#bNew").onclick=()=>{S=newSession();dirty=false;markDirty();setTab("setup");};$("#lj").onchange=loadJson;
     dbGet(AK).then(s=>{if(s){$("#auto").innerHTML=`<div class="banner warn" style="margin-top:12px">${ic("info","sm")}<div style="flex:1">${t("autosave_q",{d:new Date(s.updatedAt).toLocaleString()})}
       <div class="row" style="margin-top:8px"><button class="btn sm" id="rs">${t("continue")}</button><button class="btn sm grey" id="ds">${t("discard")}</button></div></div></div>`;
-      $("#rs").onclick=()=>{S=s;LANG=S.lang||LANG;syncLang();dirty=true;setTab("setup");};$("#ds").onclick=async()=>{await dbDel(AK);renderHome();};}});
+      $("#rs").onclick=()=>{S=migrateSession(s);LANG=S.lang||LANG;syncLang();dirty=true;setTab("setup");};$("#ds").onclick=async()=>{await dbDel(AK);renderHome();};}});
     return;}
   const ex=!dirty;
   m.innerHTML=`<div class="screen">
@@ -440,98 +469,170 @@ function renderHome(){const m=$("#app");
     $("#ta").oninput=e=>{S.takt.availMin=Number(e.target.value)||0;markDirty();$(".banner.info b").textContent=t("takt_is",{v:dur(taktSec())+"/"+t("pcs")});};
     $("#tq").oninput=e=>{S.takt.demandQty=Number(e.target.value)||0;markDirty();$(".banner.info b").textContent=t("takt_is",{v:dur(taktSec())+"/"+t("pcs")});};}
 }
+function migrateSession(o){(o.operations||[]).forEach(op=>{
+   if(op.comment==null)op.comment="";
+   (op.tasks||[]).forEach(tk=>{if(tk.comment==null)tk.comment="";});
+   if(op.type==="prep"){
+     if(!op.tasks||!op.tasks.length)op.tasks=[{id:uid(),name:op.name||"Priprema",category:"SP",comment:"",iters:[]}];
+     if(op.linkTo==null)op.linkTo="none";
+     if(op.prepPiecesFb==null)op.prepPiecesFb=op.prepPieces||1;
+     if(!op.pieceMeas)op.pieceMeas=[];
+   }});return o;}
 function loadJson(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();
-  r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.operations)throw 0;S=o;S.units=S.units||"s";S.takt.availMin=S.takt.availMin||480;LANG=S.lang||LANG;syncLang();dirty=false;toast(t("t_loaded"));setTab("setup");}catch(_){toast("✗ JSON");}};r.readAsText(f);}
+  r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.operations)throw 0;S=migrateSession(o);S.units=S.units||"s";if(S.takt)S.takt.availMin=S.takt.availMin||480;LANG=S.lang||LANG;syncLang();dirty=false;toast(t("t_loaded"));setTab("setup");}catch(_){toast("✗ JSON");}};r.readAsText(f);}
 
 /* ---- SETUP ---- */
 function renderSetup(){const m=$("#app");
-  m.innerHTML=`<div class="screen"><div class="card"><h2 style="margin-bottom:12px">${t("operations")}</h2>
+  m.innerHTML=`<div class="screen"><div class="card"><h2 style="margin-bottom:6px">${t("operations")}</h2>
+    <p class="note" style="margin-bottom:12px">${t("reorder_hint")}</p>
     <div class="addrow"><button class="btn sm" id="ar">${ic("plus")} ${t("add_reg")}</button><button class="btn sm grey" id="ap">${ic("plus")} ${t("add_prep")}</button></div>
     <div id="ops"></div></div></div>`;
-  $("#ar").onclick=()=>{S.operations.push({id:uid(),type:"regular",name:"",operator:"",tasks:[{id:uid(),name:"",category:"VA",iters:[]}]});markDirty();renderSetup();};
-  $("#ap").onclick=()=>{S.operations.push({id:uid(),type:"prep",name:"",prepTotalSec:0,prepPieces:1,prepLink:"none"});markDirty();renderSetup();};
+  $("#ar").onclick=()=>{S.operations.push({id:uid(),type:"regular",name:"",operator:"",comment:"",tasks:[{id:uid(),name:"",category:"VA",comment:"",iters:[]}]});markDirty();renderSetup();};
+  $("#ap").onclick=()=>{S.operations.push({id:uid(),type:"prep",name:"",operator:"",comment:"",linkTo:"none",prepPiecesFb:1,pieceMeas:[],tasks:[{id:uid(),name:"",category:"SP",comment:"",iters:[]}]});markDirty();renderSetup();};
   const box=$("#ops");
   if(!S.operations.length){box.innerHTML=`<div class="empty"><div class="em">${ic("setup")}</div>${t("no_ops")}</div>`;return;}
   let seq=0;
   box.innerHTML=S.operations.map(op=>{const prep=op.type==="prep";if(!prep)seq++;
-    return `<div class="op ${prep?"prep":""}" data-id="${op.id}"><div class="op-head"><span class="seqbadge">${prep?"P":seq}</span>
+    return `<div class="op ${prep?"prep":""}" data-id="${op.id}"><div class="op-head">
+      <span class="thandle" data-drag="op" data-id="${op.id}">${ic("drag")}</span>
+      <span class="seqbadge">${prep?"P":seq}</span>
       <input class="bare" style="font-weight:800" data-opn="${op.id}" placeholder="${t("op_name")}" value="${esc(op.name)}">
       <span class="chip ${prep?"prep":""}" style="${prep?"":"background:var(--accent-soft);color:var(--accent-2)"}">${prep?t("prep"):t("reg")}</span>
+      <button class="iconbtn" data-opup="${op.id}">${ic("up","sm")}</button>
+      <button class="iconbtn" data-opdn="${op.id}">${ic("down","sm")}</button>
       <button class="iconbtn danger" data-delop="${op.id}">${ic("trash","sm")}</button></div>
       <div class="op-body">${prep?prepBody(op):regBody(op)}</div></div>`;}).join("");
-  bindSetup();
+  bindSetup();enableDrag();
 }
+function taskRow(op,tk,i){const st=taskStats(tk);const prep=op.type==="prep";const hasC=tk.comment&&tk.comment.trim();
+  return `<div class="task" data-op="${op.id}" data-task="${tk.id}">
+    <div class="tk-main"><span class="thandle" data-drag="task" data-op="${op.id}" data-id="${tk.id}">${ic("drag","sm")}</span><span class="idx2">${i+1}</span><input class="bare" data-tkn placeholder="${t("task_name")}" value="${esc(tk.name)}"></div>
+    <div class="tk-ctrls">${prep?"":`<div class="cat-seg" data-cat>
+      <button class="va ${tk.category==="VA"?"on":""}" data-c="VA">VA</button>
+      <button class="sp ${tk.category==="SP"?"on":""}" data-c="SP">SP</button>
+      <button class="nva ${tk.category==="NVA"?"on":""}" data-c="NVA">NVA</button></div>`}
+      <span class="xs muted tnum" style="min-width:52px;text-align:right">${st.measured?dur(st.avg,false)+" · "+st.measured:"0"}</span>
+      <button class="iconbtn" data-tkup>${ic("up","sm")}</button>
+      <button class="iconbtn" data-tkdn>${ic("down","sm")}</button>
+      <button class="iconbtn" data-tkedit style="${hasC?"color:var(--accent-2);border-color:var(--accent)":""}">${ic("comment","sm")}</button>
+      <button class="iconbtn danger" data-tkdel>${ic("close","sm")}</button></div></div>`;}
 function regBody(op){return `<div class="field" style="margin:12px 0"><label class="f">${t("operator")}</label><input data-oper="${op.id}" value="${esc(op.operator||"")}"></div>
-  <label class="f">${t("tasks")}</label><div>${op.tasks.map((tk,i)=>{const st=taskStats(tk);
-    return `<div class="task" data-op="${op.id}" data-task="${tk.id}"><div class="tk-main"><span class="idx">${i+1}</span><input class="bare" data-tkn placeholder="${t("task_name")}" value="${esc(tk.name)}"></div><div class="tk-ctrls"><div class="cat-seg" data-cat>
-        <button class="va ${tk.category==="VA"?"on":""}" data-c="VA">VA</button>
-        <button class="sp ${tk.category==="SP"?"on":""}" data-c="SP">SP</button>
-        <button class="nva ${tk.category==="NVA"?"on":""}" data-c="NVA">NVA</button></div>
-      <span class="xs muted tnum" style="min-width:66px;text-align:right">${st.measured?dur(st.avg,false)+" · "+st.measured:"0"}</span>
-      <button class="iconbtn danger" data-tkdel>${ic("close","sm")}</button></div></div>`;}).join("")}</div>
-  <button class="btn sm grey" data-addtask="${op.id}" style="margin-top:8px" ${op.tasks.length>=10?"disabled":""}>${ic("plus","sm")} ${t("add_task")}</button>`;}
-function prepBody(op){return `<div class="banner warn" style="margin:12px 0">${ic("info","sm")} ${t("rec_prep_info")}</div>
-  <div class="row"><div><label class="f">${t("prep_total")} (${unitLbl()})</label><input type="number" min="0" step="0.1" data-pptot="${op.id}" value="${S.units==="min"?((op.prepTotalSec||0)/60):(op.prepTotalSec||0)}"></div>
-    <div><label class="f">${t("prep_pieces")}</label><input type="number" min="1" data-pppc="${op.id}" value="${op.prepPieces||1}"></div></div>
-  <div class="field"><label class="f">${t("link")}</label><select data-pplink="${op.id}">
-     <option value="none" ${op.prepLink==="none"?"selected":""}>${t("link_none")}</option>
-     <option value="prev" ${op.prepLink==="prev"?"selected":""}>${t("link_prev")}</option>
-     <option value="next" ${op.prepLink==="next"?"selected":""}>${t("link_next")}</option></select></div>
-  <div class="status ok">${t("per_piece",{v:dur(prepPerPiece(op))})}</div>`;}
+  <label class="f">${t("tasks")}</label><div data-tl="${op.id}">${op.tasks.map((tk,i)=>taskRow(op,tk,i)).join("")}</div>
+  <button class="btn sm grey" data-addtask="${op.id}" style="margin-top:8px" ${op.tasks.length>=10?"disabled":""}>${ic("plus","sm")} ${t("add_task")}</button>
+  <div class="field" style="margin-top:12px"><label class="f">${t("op_comment")}</label><input data-opc="${op.id}" value="${esc(op.comment||"")}" placeholder="${t("add_comment")}"></div>`;}
+function prepBody(op){const regs=S.operations.filter(o=>o.type==="regular");
+  return `<div class="banner info" style="margin:12px 0">${ic("info","sm")} ${t("prep_meas_info")}</div>
+  <label class="f">${t("tasks")}</label><div data-tl="${op.id}">${op.tasks.map((tk,i)=>taskRow(op,tk,i)).join("")}</div>
+  <button class="btn sm grey" data-addtask="${op.id}" style="margin-top:8px" ${op.tasks.length>=10?"disabled":""}>${ic("plus","sm")} ${t("add_task")}</button>
+  <div class="row" style="margin-top:12px">
+    <div><label class="f">${t("prep_pieces_fb")}</label><input type="number" min="0" data-ppfb="${op.id}" value="${op.prepPiecesFb||1}"></div>
+    <div><label class="f">${t("link_to")}</label><select data-pplink="${op.id}">
+       <option value="none" ${(op.linkTo==="none"||!op.linkTo)?"selected":""}>${t("link_none")}</option>
+       ${regs.map(r=>`<option value="${r.id}" ${op.linkTo===r.id?"selected":""}>${esc(r.name||t("reg"))}</option>`).join("")}</select></div></div>
+  <div class="status ok" style="margin-top:10px">${t("per_piece",{v:dur(prepPerPiece(op))})}</div>
+  <div class="field" style="margin-top:12px"><label class="f">${t("op_comment")}</label><input data-opc="${op.id}" value="${esc(op.comment||"")}" placeholder="${t("add_comment")}"></div>`;}
 function getOp(id){return S.operations.find(o=>o.id===id);}
 function bindSetup(){
   $$("[data-opn]").forEach(el=>el.oninput=e=>{getOp(el.dataset.opn).name=e.target.value;markDirty();});
   $$("[data-oper]").forEach(el=>el.oninput=e=>{getOp(el.dataset.oper).operator=e.target.value;markDirty();});
+  $$("[data-opc]").forEach(el=>el.oninput=e=>{getOp(el.dataset.opc).comment=e.target.value;markDirty();});
   $$("[data-delop]").forEach(b=>b.onclick=()=>confirmModal(t("del_op_q"),()=>{S.operations=S.operations.filter(o=>o.id!==b.dataset.delop);markDirty();renderSetup();}));
-  $$("[data-addtask]").forEach(b=>b.onclick=()=>{const op=getOp(b.dataset.addtask);if(op.tasks.length>=10){toast(t("max_tasks"));return;}op.tasks.push({id:uid(),name:"",category:"VA",iters:[]});markDirty();renderSetup();});
-  $$(".task").forEach(row=>{const op=getOp(row.dataset.op),tk=op.tasks.find(x=>x.id===row.dataset.task);
-    row.querySelector("[data-tkn]").oninput=e=>{tk.name=e.target.value;markDirty();};
+  $$("[data-opup]").forEach(b=>b.onclick=()=>{moveItem(S.operations,b.dataset.opup,-1);markDirty();renderSetup();});
+  $$("[data-opdn]").forEach(b=>b.onclick=()=>{moveItem(S.operations,b.dataset.opdn,1);markDirty();renderSetup();});
+  $$("[data-addtask]").forEach(b=>b.onclick=()=>{const op=getOp(b.dataset.addtask);if(op.tasks.length>=10){toast(t("max_tasks"));return;}op.tasks.push({id:uid(),name:"",category:op.type==="prep"?"SP":"VA",comment:"",iters:[]});markDirty();renderSetup();});
+  $$(".task").forEach(row=>{const op=getOp(row.dataset.op),tk=op.tasks.find(x=>x.id===row.dataset.task);if(!op||!tk)return;
+    const nm=row.querySelector("[data-tkn]");if(nm)nm.oninput=e=>{tk.name=e.target.value;markDirty();};
     row.querySelectorAll("[data-cat] button").forEach(cb=>cb.onclick=()=>{tk.category=cb.dataset.c;markDirty();renderSetup();});
-    row.querySelector("[data-tkdel]").onclick=()=>confirmModal(t("del_task_q"),()=>{op.tasks=op.tasks.filter(x=>x.id!==tk.id);markDirty();renderSetup();});});
-  $$("[data-pptot]").forEach(el=>el.oninput=e=>{let v=Number(e.target.value)||0;if(S.units==="min")v*=60;getOp(el.dataset.pptot).prepTotalSec=v;markDirty();el.closest(".op-body").querySelector(".status").textContent=t("per_piece",{v:dur(prepPerPiece(getOp(el.dataset.pptot)))});});
-  $$("[data-pppc]").forEach(el=>el.oninput=e=>{getOp(el.dataset.pppc).prepPieces=Number(e.target.value)||1;markDirty();el.closest(".op-body").querySelector(".status").textContent=t("per_piece",{v:dur(prepPerPiece(getOp(el.dataset.pppc)))});});
-  $$("[data-pplink]").forEach(el=>el.onchange=e=>{getOp(el.dataset.pplink).prepLink=e.target.value;markDirty();});
+    const up=row.querySelector("[data-tkup]");if(up)up.onclick=()=>{moveItem(op.tasks,tk.id,-1);markDirty();renderSetup();};
+    const dn=row.querySelector("[data-tkdn]");if(dn)dn.onclick=()=>{moveItem(op.tasks,tk.id,1);markDirty();renderSetup();};
+    const ed=row.querySelector("[data-tkedit]");if(ed)ed.onclick=()=>editTaskModal(op.id,tk.id,renderSetup);
+    const del=row.querySelector("[data-tkdel]");if(del)del.onclick=()=>confirmModal(t("del_task_q"),()=>{op.tasks=op.tasks.filter(x=>x.id!==tk.id);markDirty();renderSetup();});});
+  $$("[data-ppfb]").forEach(el=>el.oninput=e=>{getOp(el.dataset.ppfb).prepPiecesFb=Number(e.target.value)||0;markDirty();const o=el.closest(".op-body").querySelector(".status");if(o)o.textContent=t("per_piece",{v:dur(prepPerPiece(getOp(el.dataset.ppfb)))});});
+  $$("[data-pplink]").forEach(el=>el.onchange=e=>{getOp(el.dataset.pplink).linkTo=e.target.value;markDirty();});
 }
 
-/* ---- RECORD (v1 flow, fixed timer) ---- */
-let REC={opId:null,idx:0,running:false,startAt:0,raf:null,buf:{}};
-function renderRecord(){const m=$("#app");
-  const regs=S.operations.filter(o=>o.type==="regular"&&o.tasks&&o.tasks.length);
-  if(!regs.length){m.innerHTML=`<div class="screen"><div class="card"><div class="empty"><div class="em">${ic("record")}</div>${t("rec_none")}</div></div></div>`;return;}
-  if(!REC.opId||!regs.find(o=>o.id===REC.opId)){REC.opId=regs[0].id;REC.idx=0;REC.buf={};}
+/* ---- reorder + task-edit helpers ---- */
+function moveItem(arr,id,dir){const i=arr.findIndex(x=>x.id===id);if(i<0)return;const j=i+dir;if(j<0||j>=arr.length)return;const tmp=arr[i];arr[i]=arr[j];arr[j]=tmp;}
+function enableDrag(){
+  $$("[data-drag]").forEach(h=>{h.onpointerdown=e=>{
+    e.preventDefault();const type=h.dataset.drag;const el=h.closest(type==="op"?".op":".task");if(!el)return;
+    const listSel=type==="op"?"#ops > .op":`[data-tl="${h.dataset.op}"] > .task`;
+    el.classList.add("dragging");
+    const move=ev=>{const y=(ev.touches?ev.touches[0]:ev).clientY;
+      $$(listSel).forEach(s=>{if(s===el)return;const r=s.getBoundingClientRect();
+        if(y>r.top&&y<r.bottom){s.parentNode.insertBefore(el,(y<r.top+r.height/2)?s:s.nextSibling);}});};
+    const up=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);el.classList.remove("dragging");
+      if(type==="op"){const ids=$$("#ops > .op").map(o=>o.dataset.id);S.operations.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));}
+      else{const op=getOp(h.dataset.op);if(op){const ids=$$(`[data-tl="${h.dataset.op}"] > .task`).map(x=>x.dataset.task);op.tasks.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));}}
+      markDirty();renderSetup();};
+    document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);};});
+}
+function editTaskModal(opId,taskId,after){const op=getOp(opId),tk=op.tasks.find(x=>x.id===taskId);if(!tk)return;const prep=op.type==="prep";
+  $("#modal").innerHTML=`<h3>${t("edit")}</h3>
+    <div class="field" style="margin-top:12px"><label class="f">${t("task_name")}</label><input id="etn" value="${esc(tk.name||"")}"></div>
+    ${prep?"":`<div class="field"><label class="f">VA / SP / NVA</label><div class="cat-seg" id="etc">
+       <button class="va ${tk.category==="VA"?"on":""}" data-c="VA">VA</button>
+       <button class="sp ${tk.category==="SP"?"on":""}" data-c="SP">SP</button>
+       <button class="nva ${tk.category==="NVA"?"on":""}" data-c="NVA">NVA</button></div></div>`}
+    <div class="field"><label class="f">${t("task_comment")}</label><textarea id="etcm" rows="2" placeholder="${t("add_comment")}">${esc(tk.comment||"")}</textarea></div>
+    <div class="row" style="margin-top:10px"><button class="btn accent" id="ets">${ic("check")} ${t("save_x")}</button><button class="btn grey" id="etx">${t("cancel")}</button><button class="iconbtn danger" id="etd" style="flex:none">${ic("trash","sm")}</button></div>`;
+  $("#modalbg").classList.add("show");let cat=tk.category;
+  if(!prep)$$("#etc button").forEach(b=>b.onclick=()=>{cat=b.dataset.c;$$("#etc button").forEach(x=>x.classList.toggle("on",x===b));});
+  $("#ets").onclick=()=>{tk.name=$("#etn").value;tk.comment=$("#etcm").value;if(!prep)tk.category=cat;markDirty();closeModal();if(after)after();};
+  $("#etx").onclick=closeModal;
+  $("#etd").onclick=()=>{closeModal();confirmModal(t("del_task_q"),()=>{op.tasks=op.tasks.filter(x=>x.id!==tk.id);markDirty();if(after)after();});};
+}
+
+/* ---- RECORD (per-task START/STOP) ---- */
+let REC={opId:null,active:null,startAt:0,raf:null,buf:{}};
+function recOps(){return S.operations.filter(o=>o.tasks&&o.tasks.length);}
+function cyclesDone(op){const ns=op.tasks.map(tk=>(tk.iters||[]).filter(v=>v>0).length);return ns.length?Math.min(...ns):0;}
+function renderRecord(){const m=$("#app");const ops=recOps();
+  if(!ops.length){m.innerHTML=`<div class="screen"><div class="card"><div class="empty"><div class="em">${ic("record")}</div>${t("rec_none")}</div></div></div>`;return;}
+  if(!REC.opId||!ops.find(o=>o.id===REC.opId)){REC.opId=ops[0].id;REC.active=null;REC.buf={};}
   m.innerHTML=`<div class="screen"><div class="card"><label class="f">${t("rec_pick")}</label>
-    <select id="ro">${regs.map(o=>`<option value="${o.id}" ${o.id===REC.opId?"selected":""}>${esc(o.name||t("reg"))}</option>`).join("")}</select></div>
+    <select id="ro">${ops.map(o=>`<option value="${o.id}" ${o.id===REC.opId?"selected":""}>${o.type==="prep"?"["+t("prep")+"] ":""}${esc(o.name||t("reg"))}</option>`).join("")}</select></div>
     <div id="recCard"></div></div>`;
-  $("#ro").onchange=e=>{stopTick();REC.opId=e.target.value;REC.idx=0;REC.running=false;REC.buf={};renderRecord();};
+  $("#ro").onchange=e=>{stopTick();REC.opId=e.target.value;REC.active=null;REC.buf={};renderRecord();};
   drawRec();
 }
-function drawRec(){const op=getOp(REC.opId),tasks=op.tasks,idx=REC.idx;const card=$("#recCard");
-  const ct=opBreakdown(op).base;const cycles=Math.min(...tasks.map(tk=>(tk.iters||[]).filter(v=>v>0).length));
-  const allDone=idx>=tasks.length;const cur=tasks[idx];
+function drawRec(){const op=getOp(REC.opId),prep=op.type==="prep",tasks=op.tasks;const card=$("#recCard");
+  const activeTk=REC.active?tasks.find(t=>t.id===REC.active):null;
+  const ct=opBreakdown(op).base;const cycles=cyclesDone(op);const busy=!!(REC.active||Object.keys(REC.buf).length);
   card.innerHTML=`<div class="rec-stage">
-     <div class="pdots">${tasks.map((tk,i)=>`<span class="pdot ${i<idx?"done":""} ${i===idx?"active":""}">${i+1}</span>`).join("")}</div>
-     <div class="rec-task-name">${allDone?"✓ "+t("rec_all_done",{n:cycles}):esc(cur.name||t("task_name")+" "+(idx+1))}</div>
-     <div class="rec-timer" id="rt">${REC.running?fmtTimer(performance.now()-REC.startAt):"0.0"}<span class="u">${t("sec")}</span></div>
-     ${allDone?`<button class="big-btn save" id="saveIter">${ic("check")} ${t("save_iter")}</button>`
-       :(REC.running?`<button class="big-btn stop" id="stopBtn">${t("stop")}<span class="sub">${esc(cur.name||"")}</span></button>`
-         :`<button class="big-btn start" id="startBtn">${t("start")}<span class="sub">${t("rec_active")}: ${esc(cur.name||(idx+1))}</span></button>`)}
-   </div>
-   <div class="card"><div class="kpis" style="margin-bottom:6px">
-     <div class="kpi"><div class="v tnum">${dur(ct,false)} <small>${unitLbl()}</small></div><div class="l">${t("rec_op_ct")}</div></div>
-     <div class="kpi"><div class="v tnum">${cycles}</div><div class="l">${t("iters")}</div></div></div>
-     <hr class="sep">
-     <div class="tbl-wrap"><table><thead><tr><th>${t("task_name")}</th><th></th><th class="num">${t("avg")}</th><th class="num">n</th></tr></thead>
-       <tbody>${tasks.map(tk=>{const st=taskStats(tk);return `<tr><td>${esc(tk.name||"—")}</td><td><span class="chip ${tk.category.toLowerCase()}">${tk.category}</span></td><td class="num">${st.measured?dur(st.avg,false):"—"}</td><td class="num">${st.measured}</td></tr>`;}).join("")}</tbody></table></div>
+     <div class="rec-task-name">${activeTk?esc(activeTk.name||t("rec_active")):t("rec_ready")}</div>
+     <div class="rec-timer" id="rt" style="font-size:2.7rem;margin:6px 0">${REC.active?fmtTimer(performance.now()-REC.startAt):"0.0"}<span class="u">${t("sec")}</span></div>
+     <div class="row" style="max-width:430px;margin:0 auto;gap:10px">
+       <button class="btn glass" id="cancelCy" ${busy?"":"disabled"}>${ic("close")} ${t("cancel_cycle")}</button>
+       <button class="btn accent" id="finishCy" ${busy?"":"disabled"}>${ic("check")} ${t("finish_cycle")}</button></div>
+     <div class="xs" style="opacity:.85;margin-top:9px">${cycles} ${t("cycles_done")}</div></div>
+   <div class="card">
+     ${prep?`<div class="field"><label class="f">${t("pieces_q")}</label><input type="number" min="0" id="recPcs" value="${op.prepPiecesFb||1}"></div>`:""}
+     ${tasks.map(tk=>recTaskRow(op,tk)).join("")}
+     <div class="kpis" style="margin-top:10px"><div class="kpi"><div class="v tnum">${dur(ct,false)} <small>${unitLbl()}</small></div><div class="l">${t("rec_op_ct")}</div></div></div>
    </div>`;
-  if(allDone)$("#saveIter").onclick=saveIter;else if(REC.running)$("#stopBtn").onclick=stopTask;else $("#startBtn").onclick=startTask;
+  $("#cancelCy").onclick=cancelCycle;$("#finishCy").onclick=finishCycle;
+  $$("[data-toggle]").forEach(b=>b.onclick=()=>toggleTask(b.dataset.toggle));
+  $$("[data-rtedit]").forEach(b=>b.onclick=()=>editTaskModal(op.id,b.dataset.rtedit,drawRec));
+  if(REC.active){stopTick();tick();}
 }
-function startTask(){REC.running=true;REC.startAt=performance.now();drawRec();tick();}
-function tick(){const el=$("#rt");if(!el||!REC.running)return;el.firstChild.textContent=fmtTimer(performance.now()-REC.startAt);REC.raf=requestAnimationFrame(tick);}
+function recTaskRow(op,tk){const prep=op.type==="prep";const active=REC.active===tk.id;const inBuf=REC.buf[tk.id]!=null;const st=taskStats(tk);
+  return `<div class="rectask ${active?"active":""}">
+    <button class="ss ${active?"stop":"start"}" data-toggle="${tk.id}">${active?ic("stop")+" "+t("stop"):ic("play")+" "+t("start")}</button>
+    <div class="rt-nm"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(tk.name||t("task_name"))}${prep?"":` <span class="chip ${tk.category.toLowerCase()}">${tk.category}</span>`}</div>
+      <div class="xs ${inBuf?"va-c":"muted"}">${inBuf?"✓ "+dur(REC.buf[tk.id]/1000,false)+" "+unitLbl():(st.measured?dur(st.avg,false)+" · "+st.measured:"—")}</div></div>
+    <button class="iconbtn" data-rtedit="${tk.id}">${ic("edit","sm")}</button></div>`;}
+function toggleTask(id){if(REC.active===id){commitActive();drawRec();return;}if(REC.active)commitActive();REC.active=id;REC.startAt=performance.now();drawRec();}
+function commitActive(){if(!REC.active)return;const d=performance.now()-REC.startAt;REC.buf[REC.active]=Math.round(d);REC.active=null;stopTick();markDirty();}
+function tick(){const el=$("#rt");if(!el||!REC.active)return;el.firstChild.textContent=fmtTimer(performance.now()-REC.startAt);REC.raf=requestAnimationFrame(tick);}
 function stopTick(){if(REC.raf)cancelAnimationFrame(REC.raf);REC.raf=null;}
-function stopTask(){if(!REC.running)return;const d=performance.now()-REC.startAt;REC.running=false;stopTick();
-  const op=getOp(REC.opId);REC.buf[op.tasks[REC.idx].id]=Math.round(d);REC.idx++;markDirty();drawRec();}
-function saveIter(){const op=getOp(REC.opId);op.tasks.forEach(tk=>{tk.iters=tk.iters||[];tk.iters.push(REC.buf[tk.id]!=null?REC.buf[tk.id]:0);});
-  REC.buf={};REC.idx=0;REC.running=false;markDirty();toast(t("t_iter"));drawRec();}
+function finishCycle(){const op=getOp(REC.opId);if(REC.active)commitActive();
+  if(!Object.keys(REC.buf).length){toast(t("rec_ready"));return;}
+  op.tasks.forEach(tk=>{tk.iters=tk.iters||[];tk.iters.push(REC.buf[tk.id]!=null?REC.buf[tk.id]:0);});
+  if(op.type==="prep"){const el=$("#recPcs");const pcs=Number(el&&el.value)||Number(op.prepPiecesFb)||0;op.pieceMeas=op.pieceMeas||[];op.pieceMeas.push(pcs);}
+  REC.buf={};REC.active=null;stopTick();markDirty();toast(t("t_iter"));drawRec();}
+function cancelCycle(){const go=()=>{REC.buf={};REC.active=null;stopTick();markDirty();toast(t("t_cancel"));drawRec();};
+  if(Object.keys(REC.buf).length||REC.active)confirmModal(t("cancel_cycle")+"?",go);else go();}
 
 /* ---- ANALYZE (v1, dark) ---- */
 let AN={view:"regular",nva:true,scNva:0.5,scGap:0.5};
