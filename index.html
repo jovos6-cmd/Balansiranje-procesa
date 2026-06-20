@@ -299,7 +299,7 @@ const I18N={sr:{
  view:"Pogled",v_reg:"Redovne",v_prep:"Pripremne",v_comb:"Kombinovano",with_nva:"Sa NVA",wo_nva:"Bez NVA",
  ct_proc:"CT procesa (bottleneck)",eff:"Uposlenost linije",val_share:"Udeo dodate vrednosti",total_wc:"Ukupan rad",
  bal_loss:"Balansni gubitak",cap_shift:"Kapacitet / smena",
- pot_t:"Potencijal — eliminacija NVA",pot_now:"Sada (sa NVA) kom/sm.",pot_wo:"Bez NVA kom/sm.",pot_uplift:"Uvećanje produktivnosti",pot_extra:"Dodatno kom/sm.",pot_none:"Nema NVA aktivnosti za eliminaciju u ovom pogledu.",pot_note:"Za isto radno vreme ({h} h, {w} izvršilaca) eliminacija NVA daje +{p}% izlaza — oko {e} kom/smena više. Smena se NE skraćuje: oslobođeno vreme postaje dodatni proizvod.",
+ pot_t:"Potencijal — eliminacija NVA",pot_now:"Sada (sa NVA) kom/sm.",pot_wo:"Bez NVA kom/sm.",pot_uplift:"Uvećanje izlaza",pot_freed:"Oslobođeni kapacitet",pot_none:"Nema NVA aktivnosti za eliminaciju u ovom pogledu.",pot_note_bn:"NVA je (delom) na uskom grlu → eliminacija diže izlaz za +{p}% (≈ {e} kom/smena više) za isto radno vreme. Smena se ne skraćuje.",pot_note_off:"NVA je uglavnom VAN uskog grla. Eliminacija oslobađa ~{f} h kapaciteta, ali izlaz NE raste sam — to vreme postaje Višak/WIP dok ne: 1) napadneš NVA na uskom grlu, 2) rebalansiraš liniju, ili 3) smanjiš broj izvršilaca. Zato u Strukturi 'Aktivan rad' padne a 'Višak/WIP' poraste.",struk_note:"Model pretpostavlja da sve stanice rade punom brzinom (push). Višak/WIP = prekomerna proizvodnja zbog neuravnoteženosti — kad neke stanice rade brže od uskog grla. Stvarni izlaz po smeni vidi u Kaskadi (Proizvedeno) i kartici Potencijal.",
  yama_t:"Yamazumi — struktura CT po operaciji",
  optable:"Operacije i CT",h_op:"Operacija",h_oper:"Operater",h_va:"VA",h_sp:"SP",h_nva:"NVA",h_prep:"Prep",h_ct:"CT",h_rate:"kom/h",h_gap:"GAP",h_takt:"vs Takt",
  wip_t:"WIP između operacija",h_pair:"Tačka",h_acc:"Gomilanje (kom/h)",h_wip:"WIP/smena",h_queue:"Čekanje",
@@ -350,7 +350,7 @@ const I18N={sr:{
  view:"View",v_reg:"Regular",v_prep:"Prep",v_comb:"Combined",with_nva:"With NVA",wo_nva:"Without NVA",
  ct_proc:"Process CT (bottleneck)",eff:"Line utilization",val_share:"Value-added share",total_wc:"Total work",
  bal_loss:"Balancing loss",cap_shift:"Capacity / shift",
- pot_t:"Potential — eliminate NVA",pot_now:"Now (with NVA) pcs/sh.",pot_wo:"Without NVA pcs/sh.",pot_uplift:"Productivity gain",pot_extra:"Extra pcs/sh.",pot_none:"No NVA activities to eliminate in this view.",pot_note:"For the same shift time ({h} h, {w} workers), eliminating NVA yields +{p}% output — about {e} more pcs/shift. The shift is NOT shortened: freed time becomes extra product.",
+ pot_t:"Potential — eliminate NVA",pot_now:"Now (with NVA) pcs/sh.",pot_wo:"Without NVA pcs/sh.",pot_uplift:"Output increase",pot_freed:"Freed capacity",pot_none:"No NVA activities to eliminate in this view.",pot_note_bn:"NVA is (partly) on the bottleneck → eliminating it raises output by +{p}% (≈ {e} more pcs/shift) for the same shift time. The shift isn't shortened.",pot_note_off:"NVA is mostly OFF the bottleneck. Eliminating it frees ~{f} h of capacity, but output does NOT rise by itself — that time becomes Excess/WIP until you: 1) attack NVA on the bottleneck, 2) rebalance the line, or 3) reduce the number of workers. That's why in the Structure 'Active work' drops and 'Excess/WIP' rises.",struk_note:"The model assumes all stations run at full speed (push). Excess/WIP = overproduction from imbalance — when some stations run faster than the bottleneck. See real per-shift output in the Cascade (Produced) and the Potential card.",
  yama_t:"Yamazumi — CT structure per operation",
  optable:"Operations & CT",h_op:"Operation",h_oper:"Operator",h_va:"VA",h_sp:"SP",h_nva:"NVA",h_prep:"Prep",h_ct:"CT",h_rate:"pcs/h",h_gap:"GAP",h_takt:"vs Takt",
  wip_t:"WIP between operations",h_pair:"Point",h_acc:"Build-up (pcs/h)",h_wip:"WIP/shift",h_queue:"Queue",
@@ -770,13 +770,13 @@ function drawYama(){const box=$("#yama");const leg=$("#ylegend");const tk=taktSe
       <div class="ylabel">${esc(name||"—")}</div></div>`;};
   if(AN.yama==="task"){
     const reg=S.operations.filter(o=>o.type==="regular");
-    const rowsT=reg.map(o=>{const w=Number(o.workers)||1;const tasks=(o.tasks||[]).map(tk2=>({name:tk2.name,cat:tk2.category,v:taskStats(tk2).avg/w})).filter(s=>s.v>0.001);const ct=tasks.reduce((a,s)=>a+s.v,0);return{op:o,tasks,ct};}).filter(r=>r.ct>0);
+    const rowsT=reg.map(o=>{const w=Number(o.workers)||1;const tasks=(o.tasks||[]).map(tk2=>({name:tk2.name,cat:tk2.category,v:taskStats(tk2).avg/w})).filter(s=>s.v>0.001&&(AN.nva||s.cat!=="NVA"));const ct=tasks.reduce((a,s)=>a+s.v,0);return{op:o,tasks,ct};}).filter(r=>r.ct>0);
     if(!rowsT.length){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;leg.innerHTML="";return;}
     const bnv=Math.max(...rowsT.map(r=>r.ct));const maxV=Math.max(bnv,tk||0)*1.16||1;
     box.innerHTML=`<div class="yama">${tk?`<div class="refline" style="bottom:${36+(tk/maxV)*H}px"><span>Takt ${dur(tk)}</span></div>`:""}
       ${rowsT.map(r=>{const seg=r.tasks.map(s=>`<div class="yseg ${s.cat.toLowerCase()}-bgc" style="height:${(s.v/r.ct)*100}%" title="${esc(s.name||"")} ${dur(s.v)}"></div>`).join("");
         return col(r.op.name,r.ct,seg,Math.abs(r.ct-bnv)<1e-6,maxV);}).join("")}</div>`;
-    leg.innerHTML=[["va","va_full"],["sp","sp_full"],["nva","nva_full"]].map(([c,k])=>`<span><span class="dot ${c}-bgc"></span>${t(k)}</span>`).join("");
+    leg.innerHTML=[["va","va_full"],["sp","sp_full"]].concat(AN.nva?[["nva","nva_full"]]:[]).map(([c,k])=>`<span><span class="dot ${c}-bgc"></span>${t(k)}</span>`).join("");
     return;
   }
   const a=analysis(AN.view,AN.nva);if(!a.rows.length){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;leg.innerHTML="";return;}
@@ -811,15 +811,15 @@ function drawPotential(){const box=$("#pot");if(!box)return;
   const cN=cascade(AN.view,true),c0=cascade(AN.view,false);
   const prodN=cN.produced,prod0=c0.produced;
   if(prodN<=0){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;return;}
-  const extra=prod0-prodN,up=prodN>0?(prod0/prodN-1):0;
-  const H=Number(S.shiftHours)||8,W=cN.sumWorkers||1;
-  if(extra<0.5){box.innerHTML=`<p class="muted small">${t("pot_none")}</p>`;return;}
+  const extra=prod0-prodN,up=prodN>0?(prod0/prodN-1):0,freed=cN.nvaH;
+  if(freed<0.05&&extra<0.5){box.innerHTML=`<p class="muted small">${t("pot_none")}</p>`;return;}
+  const onBn=up>=0.02;
   box.innerHTML=`<div class="kpis" style="margin-bottom:12px">
     <div class="kpi"><div class="v tnum">${nf0(prodN)}</div><div class="l">${t("pot_now")}</div></div>
-    <div class="kpi good"><div class="v tnum">${nf0(prod0)}</div><div class="l">${t("pot_wo")}</div></div>
-    <div class="kpi good"><div class="v tnum">+${nf0(up*100)}<small>%</small></div><div class="l">${t("pot_uplift")}</div></div>
-    <div class="kpi good"><div class="v tnum">+${nf0(extra)}</div><div class="l">${t("pot_extra")}</div></div></div>
-    <div class="banner info" style="margin:0">${ic("info","sm")}<div>${t("pot_note",{h:H,w:W,p:nf0(up*100),e:nf0(extra)})}</div></div>`;
+    <div class="kpi ${onBn?"good":""}"><div class="v tnum">${nf0(prod0)}</div><div class="l">${t("pot_wo")}</div></div>
+    <div class="kpi ${onBn?"good":"warn"}"><div class="v tnum">+${nf0(up*100)}<small>%</small></div><div class="l">${t("pot_uplift")}</div></div>
+    <div class="kpi"><div class="v tnum">${nf(freed,1)}<small> ${t("hours")}</small></div><div class="l">${t("pot_freed")}</div></div></div>
+    <div class="banner ${onBn?"info":"warn"}" style="margin:0">${ic("info","sm")}<div>${onBn?t("pot_note_bn",{p:nf0(up*100),e:nf0(extra)}):t("pot_note_off",{f:nf(freed,1)})}</div></div>`;
 }
 function drawStruktura(){const c=cascade();const box=$("#struk");
   if(c.capacityH<=0){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;return;}
@@ -838,7 +838,7 @@ function drawStruktura(){const c=cascade();const box=$("#struk");
     <div style="flex:1;min-width:190px"><table style="width:100%;font-size:.85rem"><tbody>
       ${segs.map(s=>`<tr><td><span class="dot" style="background:${col[s[0]]}"></span> ${s[1]}</td><td class="num tnum">${nf(s[2],1)} ${t("hours")}</td><td class="num muted">${nf0(s[2]/total*100)}%</td></tr>`).join("")}
       <tr style="border-top:1px solid var(--line)"><td><b>${t("st_active")}</b></td><td class="num tnum"><b>${nf(c.activeH,1)} ${t("hours")}</b></td><td class="num muted">${nf0(c.activeH/total*100)}%</td></tr>
-      </tbody></table></div></div>`;
+      </tbody></table></div></div><p class="note" style="margin-top:10px">${t("struk_note")}</p>`;
 }
 function drawWip(){const w=wipData(AN.view);const box=$("#wip");
   if(!w.length){box.innerHTML=`<p class="muted small">${t("no_wip")}</p>`;return;}
