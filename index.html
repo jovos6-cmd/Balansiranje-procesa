@@ -249,6 +249,7 @@ tr.hl td{background:rgba(255,107,107,.08)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="font.js"></script>
+<script src="h2c.js"></script>
 <script>
 "use strict";
 /* ===== icons ===== */
@@ -296,7 +297,7 @@ const I18N={sr:{
  start:"START",stop:"STOP",rec_all_done:"Svi zahvati snimljeni — ciklus {n}",rec_active:"Aktivan zahvat",save_iter:"Sačuvaj ciklus",
  rec_op_ct:"CT operacije",rec_idle:"Dodirni START",
  view:"Pogled",v_reg:"Redovne",v_prep:"Pripremne",v_comb:"Kombinovano",with_nva:"Sa NVA",wo_nva:"Bez NVA",
- ct_proc:"CT procesa (bottleneck)",eff:"Efikasnost linije",val_share:"Udeo dodate vrednosti",total_wc:"Ukupan rad",
+ ct_proc:"CT procesa (bottleneck)",eff:"Uposlenost linije",val_share:"Udeo dodate vrednosti",total_wc:"Ukupan rad",
  bal_loss:"Balansni gubitak",cap_shift:"Kapacitet / smena",
  yama_t:"Yamazumi — struktura CT po operaciji",
  optable:"Operacije i CT",h_op:"Operacija",h_oper:"Operater",h_va:"VA",h_sp:"SP",h_nva:"NVA",h_prep:"Prep",h_ct:"CT",h_rate:"kom/h",h_gap:"GAP",h_takt:"vs Takt",
@@ -305,10 +306,10 @@ const I18N={sr:{
  bal_t:"Balansiranje",bal_bn:"Usko grlo: {op} ({ct}). Diktira tempo linije.",bal_over:"Iznad takta: {op} ({ct} > {takt}).",
  bal_under:"Podopterećeno: {op} — {gap} ispod uskog grla.",bal_nva:"{op}: NVA {nva}. Eliminacija 50% spušta CT na {res}.",bal_ok:"Linija je relativno uravnotežena ({eff}%).",
  norms_t:"Norme i scenariji",n_asis:"Realna (as-is)",n_best:"Best case",n_scn:"Scenario",
- nva_red:"Redukcija NVA",gap_red:"Redukcija GAP",h_norm:"Norma",h_ctpc:"CT/kom",h_psh:"kom/smena",h_eff:"Efik.",
+ nva_red:"Redukcija NVA",gap_red:"Redukcija GAP",h_norm:"Norma",h_ctpc:"CT/kom",h_psh:"kom/smena",h_eff:"Upos.",
  formula:"CT = VA + SP + NVA·(1−nva%) + GAP·(1−gap%) + Prep",no_data:"Nema dovoljno izmerenih podataka.",
  export_t:"Izvoz",comments:"Komentar / zaključak",concl_ph:"Glavni nalazi i akcije…",
- e_pdf:"PDF izveštaj",e_xlsx:"Excel (.xlsx)",e_csv:"CSV merenja",e_json:"Sačuvaj sesiju (.json)",exp_ok:"Izvezeno — bezbedno je zatvoriti.",
+ e_pdf:"PDF izveštaj",e_xlsx:"Excel (.xlsx)",e_csv:"CSV merenja",e_json:"Sačuvaj sesiju (.json)",exp_ok:"Izvezeno — bezbedno je zatvoriti.",pdf_render:"Pravim PDF (snimak ekrana)…",pdf_nolib:"html2canvas nije učitan — proveri h2c.js.",
  sec:"s",min:"min",pcs:"kom",over:"iznad",under:"ispod",ok:"u taktu",none:"—",
  del:"Obriši",cancel:"Odustani",reload_warn:"Imaš merenja koja nisu izvezena. Napustiti stranicu?",
  t_loaded:"Sesija učitana",t_iter:"Ciklus sačuvan",update_ready:"Nova verzija je spremna",refresh:"Osveži",
@@ -346,7 +347,7 @@ const I18N={sr:{
  start:"START",stop:"STOP",rec_all_done:"All tasks recorded — cycle {n}",rec_active:"Active task",save_iter:"Save cycle",
  rec_op_ct:"Operation CT",rec_idle:"Tap START",
  view:"View",v_reg:"Regular",v_prep:"Prep",v_comb:"Combined",with_nva:"With NVA",wo_nva:"Without NVA",
- ct_proc:"Process CT (bottleneck)",eff:"Line efficiency",val_share:"Value-added share",total_wc:"Total work",
+ ct_proc:"Process CT (bottleneck)",eff:"Line utilization",val_share:"Value-added share",total_wc:"Total work",
  bal_loss:"Balancing loss",cap_shift:"Capacity / shift",
  yama_t:"Yamazumi — CT structure per operation",
  optable:"Operations & CT",h_op:"Operation",h_oper:"Operator",h_va:"VA",h_sp:"SP",h_nva:"NVA",h_prep:"Prep",h_ct:"CT",h_rate:"pcs/h",h_gap:"GAP",h_takt:"vs Takt",
@@ -355,10 +356,10 @@ const I18N={sr:{
  bal_t:"Balancing",bal_bn:"Bottleneck: {op} ({ct}). Sets the line pace.",bal_over:"Above takt: {op} ({ct} > {takt}).",
  bal_under:"Underloaded: {op} — {gap} below the bottleneck.",bal_nva:"{op}: NVA {nva}. Removing 50% lowers CT to {res}.",bal_ok:"Line is relatively balanced ({eff}%).",
  norms_t:"Norms & scenarios",n_asis:"As-is",n_best:"Best case",n_scn:"Scenario",
- nva_red:"NVA reduction",gap_red:"GAP reduction",h_norm:"Norm",h_ctpc:"CT/pc",h_psh:"pcs/shift",h_eff:"Eff.",
+ nva_red:"NVA reduction",gap_red:"GAP reduction",h_norm:"Norm",h_ctpc:"CT/pc",h_psh:"pcs/shift",h_eff:"Util.",
  formula:"CT = VA + SP + NVA·(1−nva%) + GAP·(1−gap%) + Prep",no_data:"Not enough measured data.",
  export_t:"Export",comments:"Comment / conclusion",concl_ph:"Key findings and actions…",
- e_pdf:"PDF report",e_xlsx:"Excel (.xlsx)",e_csv:"CSV measurements",e_json:"Save session (.json)",exp_ok:"Exported — safe to close.",
+ e_pdf:"PDF report",e_xlsx:"Excel (.xlsx)",e_csv:"CSV measurements",e_json:"Save session (.json)",exp_ok:"Exported — safe to close.",pdf_render:"Building PDF (screen capture)…",pdf_nolib:"html2canvas not loaded — check h2c.js.",
  sec:"s",min:"min",pcs:"pcs",over:"over",under:"under",ok:"on takt",none:"—",
  del:"Delete",cancel:"Cancel",reload_warn:"You have measurements that weren't exported. Leave the page?",
  t_loaded:"Session loaded",t_iter:"Cycle saved",update_ready:"New version ready",refresh:"Refresh",
@@ -418,7 +419,7 @@ function taskStats(tk){const v=(tk.iters||[]).filter(x=>x>0);if(!v.length)return
   const sum=v.reduce((a,b)=>a+b,0);return{avg:sum/v.length/1000,min:Math.min(...v)/1000,max:Math.max(...v)/1000,n:(tk.iters||[]).length,measured:v.length};}
 function opBreakdown(op){let va=0,sp=0,nva=0;(op.tasks||[]).forEach(tk=>{const a=taskStats(tk).avg;if(tk.category==="VA")va+=a;else if(tk.category==="SP")sp+=a;else nva+=a;});return{va,sp,nva,base:va+sp+nva};}
 function prepAvgPieces(op){const v=(op.pieceMeas||[]).filter(x=>x>0);if(v.length)return v.reduce((a,b)=>a+b,0)/v.length;return Number(op.prepPiecesFb)||Number(op.prepPieces)||0;}
-function prepPerPiece(op){const p=prepAvgPieces(op);const w=Number(op.workers)||1;const d=opBreakdown(op).base/(w>0?w:1);return p>0?d/p:0;}
+function prepPerPiece(op){const w=Number(op.workers)||1;return opBreakdown(op).base/(w>0?w:1);}
 function taktSec(){const T=S.takt;if(T.mode==="direct")return Number(T.directSec)||0;const q=Number(T.demandQty)||0;return q>0?((Number(T.availMin)||0)*60)/q:0;}
 function processData(view){
   const reg=S.operations.filter(o=>o.type==="regular");
@@ -426,10 +427,11 @@ function processData(view){
   const byId={};rows.forEach(r=>byId[r.op.id]=r);
   if(view==="combined"){
     S.operations.filter(o=>o.type==="prep"&&o.linkTo&&o.linkTo!=="none").forEach(p=>{
-      const tgt=byId[p.linkTo];if(tgt){const pp=prepPerPiece(p);tgt.prep+=pp;tgt.ct+=pp;}});}
+      const tgt=byId[p.linkTo];if(tgt){const b=opBreakdown(p);const wp=Number(p.workers)||1;const k=wp>0?wp:1;
+        tgt.va+=b.va/k;tgt.sp+=b.sp/k;tgt.nva+=b.nva/k;tgt.prep+=b.base/k;tgt.ct+=b.base/k;}});}
   return rows;
 }
-function prepData(){return S.operations.filter(o=>o.type==="prep").map(o=>({op:o,va:0,sp:0,nva:0,prep:prepPerPiece(o),ct:prepPerPiece(o)}));}
+function prepData(){return S.operations.filter(o=>o.type==="prep").map(o=>{const b=opBreakdown(o);const w=Number(o.workers)||1;const k=w>0?w:1;return{op:o,va:b.va/k,sp:b.sp/k,nva:b.nva/k,prep:b.base/k,ct:b.base/k,workers:k};});}
 function analysis(view,withNVA){
   let rows=view==="prep"?prepData():processData(view);
   if(!withNVA)rows=rows.map(r=>({...r,ct:r.ct-r.nva,nva:0}));
@@ -452,8 +454,10 @@ function normRow(view,nvaRed,gapRed){const base=analysis(view,true);
   const perShift=bn>0?(3600/bn)*H:0;const perH=perShift/H;const tk=taktSec();
   return{ctpc:bn,perShift,perH,eff,bn,tk};}
 
-function cascade(){
-  const src=processData("regular").filter(r=>r.ct>0).map(r=>({op:r.op,ct:r.ct,va:r.va,sp:r.sp,nva:r.nva,workers:Number(r.op.workers)||1}));
+function cascade(view,withNVA){
+  view=view||AN.view;withNVA=(withNVA===undefined)?AN.nva:withNVA;
+  const a=analysis(view,withNVA);
+  const src=a.rows.filter(r=>r.ct>0).map(r=>({op:r.op,ct:r.ct,va:r.va,sp:r.sp,nva:r.nva,workers:Number(r.workers)||1}));
   const P=(Number(S.shiftHours)||8)*3600;
   src.forEach(r=>{r.maxOut=r.ct>0?P/r.ct:0;});
   let prev=Infinity;
@@ -600,7 +604,6 @@ function prepBody(op){const regs=S.operations.filter(o=>o.type==="regular");
   <div class="row" style="margin-top:12px">
     <div style="flex:0 0 92px"><label class="f">${t("qty")}</label><input type="number" min="1" data-opqty="${op.id}" value="${op.bulkQty||1}"></div>
     <div style="flex:0 0 92px"><label class="f">${t("workers")}</label><input type="number" min="1" data-opw="${op.id}" value="${op.workers||1}"></div>
-    <div><label class="f">${t("prep_pieces_fb")}</label><input type="number" min="0" data-ppfb="${op.id}" value="${op.prepPiecesFb||1}"></div>
     <div><label class="f">${t("link_to")}</label><select data-pplink="${op.id}">
        <option value="none" ${(op.linkTo==="none"||!op.linkTo)?"selected":""}>${t("link_none")}</option>
        ${regs.map(r=>`<option value="${r.id}" ${op.linkTo===r.id?"selected":""}>${esc(r.name||t("reg"))}</option>`).join("")}</select></div></div>
@@ -624,7 +627,6 @@ function bindSetup(){
     const dn=row.querySelector("[data-tkdn]");if(dn)dn.onclick=()=>{moveItem(op.tasks,tk.id,1);markDirty();renderSetup();};
     const ed=row.querySelector("[data-tkedit]");if(ed)ed.onclick=()=>editTaskModal(op.id,tk.id,renderSetup);
     const del=row.querySelector("[data-tkdel]");if(del)del.onclick=()=>confirmModal(t("del_task_q"),()=>{op.tasks=op.tasks.filter(x=>x.id!==tk.id);markDirty();renderSetup();});});
-  $$("[data-ppfb]").forEach(el=>el.oninput=e=>{getOp(el.dataset.ppfb).prepPiecesFb=Number(e.target.value)||0;markDirty();const o=el.closest(".op-body").querySelector(".status");if(o)o.textContent=t("per_piece",{v:dur(prepPerPiece(getOp(el.dataset.ppfb)))});});
   $$("[data-pplink]").forEach(el=>el.onchange=e=>{getOp(el.dataset.pplink).linkTo=e.target.value;markDirty();});
 }
 
@@ -690,7 +692,6 @@ function drawRec(){const op=getOp(REC.opId),prep=op.type==="prep",tasks=op.tasks
        <button class="btn accent" id="finishCy" ${busy?"":"disabled"}>${ic("check")} ${t("finish_cycle")}</button></div>
      <div class="xs" style="opacity:.85;margin-top:9px">${cycles} ${t("cycles_done")}</div></div>
    <div class="card">
-     ${prep?`<div class="field"><label class="f">${t("pieces_q")}</label><input type="number" min="0" id="recPcs" value="${op.prepPiecesFb||1}"></div>`:""}
      ${tasks.map(tk=>recTaskRow(op,tk)).join("")}
      <div class="kpis" style="margin-top:10px"><div class="kpi"><div class="v tnum">${dur(ct,false)} <small>${unitLbl()}</small></div><div class="l">${t("rec_op_ct")}</div></div></div>
    </div>`;
@@ -712,22 +713,21 @@ function stopTick(){if(REC.raf)cancelAnimationFrame(REC.raf);REC.raf=null;}
 function finishCycle(){const op=getOp(REC.opId);if(REC.active)commitActive();
   if(!Object.keys(REC.buf).length){toast(t("rec_ready"));return;}
   op.tasks.forEach(tk=>{tk.iters=tk.iters||[];tk.iters.push(REC.buf[tk.id]!=null?REC.buf[tk.id]:0);});
-  if(op.type==="prep"){const el=$("#recPcs");const pcs=Number(el&&el.value)||Number(op.prepPiecesFb)||0;op.pieceMeas=op.pieceMeas||[];op.pieceMeas.push(pcs);}
   REC.buf={};REC.active=null;stopTick();markDirty();toast(t("t_iter"));drawRec();}
 function cancelCycle(){const go=()=>{REC.buf={};REC.active=null;stopTick();markDirty();toast(t("t_cancel"));drawRec();};
   if(Object.keys(REC.buf).length||REC.active)confirmModal(t("cancel_cycle")+"?",go);else go();}
 
 /* ---- ANALYZE (v1, dark) ---- */
-let AN={view:"regular",nva:true,scNva:0.5,scGap:0.5,yama:"cat"};
+let AN={view:"combined",nva:true,scNva:0.5,scGap:0.5,yama:"cat"};
 function hasData(){return S.operations.some(o=>o.type==="regular"&&o.tasks&&o.tasks.some(tk=>(tk.iters||[]).some(v=>v>0)))||S.operations.some(o=>o.type==="prep"&&prepPerPiece(o)>0);}
 function renderAnalyze(){const m=$("#app");
   if(!hasData()){m.innerHTML=`<div class="screen"><div class="card"><div class="empty"><div class="em">${ic("analyze")}</div>${t("no_data")}</div></div></div>`;return;}
   m.innerHTML=`<div class="screen">
    <div class="card"><div class="grid g2">
      <div><label class="f">${t("view")}</label><div class="seg" id="vSeg">
+       <button data-v="combined" class="${AN.view==="combined"?"on":""}">${t("v_comb")}</button>
        <button data-v="regular" class="${AN.view==="regular"?"on":""}">${t("v_reg")}</button>
-       <button data-v="prep" class="${AN.view==="prep"?"on":""}">${t("v_prep")}</button>
-       <button data-v="combined" class="${AN.view==="combined"?"on":""}">${t("v_comb")}</button></div></div>
+       <button data-v="prep" class="${AN.view==="prep"?"on":""}">${t("v_prep")}</button></div></div>
      <div><label class="f">NVA</label><div class="seg" id="nSeg">
        <button data-n="1" class="${AN.nva?"on":""}">${t("with_nva")}</button>
        <button data-n="0" class="${!AN.nva?"on":""}">${t("wo_nva")}</button></div></div></div>
@@ -807,13 +807,17 @@ function drawCascade(){const c=cascade();const box=$("#casc");
 function drawStruktura(){const c=cascade();const box=$("#struk");
   if(c.capacityH<=0){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;return;}
   const total=c.capacityH;
-  const col={va:"var(--va)",sp:"var(--sp)",nva:"var(--nva)",wait:"var(--accent)",exc:"var(--prep)"};
+  const _cs=getComputedStyle(document.documentElement),_rc=v=>((_cs.getPropertyValue(v)||"").trim()||v);
+  const col={va:_rc("--va"),sp:_rc("--sp"),nva:_rc("--nva"),wait:_rc("--accent"),exc:_rc("--prep")};
+  const _line=_rc("--line");
   const segs=[["va",t("va_full"),c.vaH],["sp",t("sp_full"),c.spH],["nva",t("nva_full"),c.nvaH],["wait",t("st_wait"),c.waitingH],["exc",t("st_excess"),c.excessH]];
-  let acc=0;const stops=segs.filter(s=>s[2]>0.0001).map(s=>{const a0=acc/total*100;acc+=s[2];const b0=acc/total*100;return `${col[s[0]]} ${a0}% ${b0}%`;}).join(",")||"var(--line) 0% 100%";
+  let acc=0;const R=54,CIRC=2*Math.PI*R,cx=70,cy=70;
+  const arcs=segs.filter(s=>s[2]>0.0001).map(s=>{const len=s[2]/total*CIRC;const el=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${col[s[0]]}" stroke-width="22" stroke-dasharray="${len.toFixed(2)} ${(CIRC-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;acc+=len;return el;}).join("");
   box.innerHTML=`<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-    <div style="width:148px;height:148px;border-radius:50%;flex:none;background:conic-gradient(${stops})">
-      <div style="position:relative;width:100%;height:100%"><div style="position:absolute;inset:24px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center">
-        <div class="tnum" style="font-size:1.5rem;font-weight:850">${nf0(total)}</div><div class="xs muted">${t("st_capacity")} (${t("hours")})</div></div></div></div>
+    <div style="position:relative;width:140px;height:140px;flex:none">
+      <svg width="140" height="140" viewBox="0 0 140 140"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${_line}" stroke-width="22"/>${arcs}</svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div class="tnum" style="font-size:1.4rem;font-weight:850">${nf0(total)}</div><div class="xs muted">${t("st_capacity")} (${t("hours")})</div></div></div>
     <div style="flex:1;min-width:190px"><table style="width:100%;font-size:.85rem"><tbody>
       ${segs.map(s=>`<tr><td><span class="dot" style="background:${col[s[0]]}"></span> ${s[1]}</td><td class="num tnum">${nf(s[2],1)} ${t("hours")}</td><td class="num muted">${nf0(s[2]/total*100)}%</td></tr>`).join("")}
       <tr style="border-top:1px solid var(--line)"><td><b>${t("st_active")}</b></td><td class="num tnum"><b>${nf(c.activeH,1)} ${t("hours")}</b></td><td class="num muted">${nf0(c.activeH/total*100)}%</td></tr>
@@ -871,9 +875,9 @@ function exportXLSX(){const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(meas),"Merenja");
   ["regular","combined"].forEach(view=>{const a=analysis(view,true);const os=[["Operacija","VA_s","SP_s","NVA_s","Prep_s","CT_s","kom/h"]];
     a.rows.forEach(r=>os.push([r.op.name,+r.va.toFixed(2),+r.sp.toFixed(2),+r.nva.toFixed(2),+r.prep.toFixed(2),+r.ct.toFixed(2),Math.round(r.rate)]));
-    os.push([],["Bottleneck_s",+a.bottleneck.toFixed(2)],["Efikasnost_%",+(a.eff*100).toFixed(1)]);
+    os.push([],["Bottleneck_s",+a.bottleneck.toFixed(2)],["Uposlenost_%",+(a.eff*100).toFixed(1)]);
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(os),view==="regular"?"Operacije":"Kombinovano");});
-  const c=cascade();const cs=[["Operacija","Izvrsilaca","CT_s","MaxOUT","RealOUT","kom/h"]];
+  const c=cascade("combined",true);const cs=[["Operacija","Izvrsilaca","CT_s","MaxOUT","RealOUT","kom/h"]];
   c.rows.forEach(r=>cs.push([r.op.name,r.workers,+r.ct.toFixed(2),Math.round(r.maxOut),Math.round(r.realOut),Math.round(r.rate)]));
   cs.push([],["Proizvedeno/smena",Math.round(c.produced)],["WIP u procesu",Math.round(c.wip)],["Stizemo u roku",c.inTime===null?"-":(c.inTime?"DA":"NE")],[],
     ["Struktura(h)","h","%"],["Aktivan",+c.activeH.toFixed(1),Math.round(c.activeH/c.capacityH*100)],["Cekanje",+c.waitingH.toFixed(1),Math.round(c.waitingH/c.capacityH*100)],
@@ -883,36 +887,38 @@ function exportXLSX(){const wb=XLSX.utils.book_new();
 async function loadImg(u){try{const r=await fetch(u);const b=await r.blob();return await new Promise(res=>{const f=new FileReader();f.onload=()=>res(f.result);f.readAsDataURL(b);});}catch(e){return null;}}
 function regFont(doc){try{if(window.__TECOR_FONT__){doc.addFileToVFS("DejaVuSans.ttf",window.__TECOR_FONT__);doc.addFont("DejaVuSans.ttf","DejaVuSans","normal");doc.setFont("DejaVuSans");return "DejaVuSans";}}catch(e){}return undefined;}
 function pdfHead(doc,txt,y,ML,FONT){const Hp=doc.internal.pageSize.getHeight();if(y>Hp-90){doc.addPage();y=40;}if(FONT)doc.setFont(FONT);doc.setFontSize(11).setTextColor(5,61,120).text(txt,ML,y);return y+4;}
-async function exportPDF(){const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"pt",format:"a4"});const FONT=regFont(doc);
-  const W=doc.internal.pageSize.getWidth(),Hp=doc.internal.pageSize.getHeight(),ML=40;let y=40;const C={blue:[5,61,120],grey:[120,120,120]};
-  const TS={font:FONT,fontStyle:"normal",fontSize:8,textColor:[35,35,35]};const HS={fillColor:C.blue,textColor:[255,255,255],font:FONT,fontStyle:"normal",fontSize:8};
-  const logo=await loadImg("logo.png");if(logo){try{doc.addImage(logo,"PNG",ML,y,130,30);}catch(e){}}
-  y+=46;if(FONT)doc.setFont(FONT);doc.setFontSize(15).setTextColor.apply(doc,C.blue);doc.text("Balansiranje operacija",ML,y);
-  y+=7;doc.setDrawColor(5,61,120).setLineWidth(1.5).line(ML,y,W-ML,y);y+=14;
-  doc.autoTable({startY:y,body:[[t("client"),S.meta.client||"—",t("process"),S.meta.process||"—"],[t("date"),S.meta.date||"—",t("observer"),S.meta.observer||"—"],["Takt",dur(taktSec()),t("location"),S.meta.location||"—"]],theme:"plain",styles:TS,margin:{left:ML,right:ML}});
-  y=doc.lastAutoTable.finalY+14;const c=cascade();
-  if(c.inTime!==null){if(FONT)doc.setFont(FONT);doc.setFontSize(10);doc.setTextColor.apply(doc,c.inTime?[31,158,90]:[200,60,60]);doc.text(`${t("in_time")}: ${c.inTime?t("yes_"):t("no_")}  (${dur(c.bottleneck)} vs takt ${dur(c.takt)})`,ML,y);y+=16;}
-  y=pdfHead(doc,t("cascade_t"),y,ML,FONT);
-  doc.autoTable({startY:y+4,head:[[t("h_op"),t("h_workers"),t("h_ct"),t("h_maxout"),t("h_realout"),t("komh")]],body:c.rows.map(r=>[r.op.name||"—",r.workers,dur(r.ct,false),nf0(r.maxOut),nf0(r.realOut),nf0(r.rate)]),headStyles:HS,styles:TS,margin:{left:ML,right:ML}});
-  y=doc.lastAutoTable.finalY+6;if(FONT)doc.setFont(FONT);doc.setFontSize(8);doc.setTextColor.apply(doc,C.grey);doc.text(`${t("produced")}: ${nf0(c.produced)}    ${t("wip_proc")}: ${nf0(c.wip)}    ${t("line_komh")}: ${nf0(c.komH)}`,ML,y);y+=16;
-  y=pdfHead(doc,t("struktura_t"),y,ML,FONT);
-  doc.autoTable({startY:y+4,head:[[t("struktura_t"),t("hours"),"%"]],body:[
-    [t("va_full"),nf(c.vaH,1),nf0(c.vaH/c.capacityH*100)],[t("sp_full"),nf(c.spH,1),nf0(c.spH/c.capacityH*100)],[t("nva_full"),nf(c.nvaH,1),nf0(c.nvaH/c.capacityH*100)],
-    [t("st_wait"),nf(c.waitingH,1),nf0(c.waitingH/c.capacityH*100)],[t("st_excess"),nf(c.excessH,1),nf0(c.excessH/c.capacityH*100)],[t("st_capacity"),nf(c.capacityH,1),"100"]],headStyles:HS,styles:TS,margin:{left:ML,right:ML}});
-  y=doc.lastAutoTable.finalY+16;
-  const combos=[["combined",true],["combined",false],["regular",true],["regular",false]];
-  combos.forEach(([view,withN])=>{const a=analysis(view,withN);if(!a.rows.length)return;
-    y=pdfHead(doc,`${view==="combined"?t("v_comb"):t("v_reg")} — ${withN?t("with_nva"):t("wo_nva")}`,y,ML,FONT);
-    doc.autoTable({startY:y+4,head:[[t("h_op"),"VA","SP","NVA","Prep",t("h_ct"),t("komh")]],body:a.rows.map(r=>[r.op.name||"—",dur(r.va,false),dur(r.sp,false),dur(r.nva,false),dur(r.prep,false),dur(r.ct,false),nf0(r.rate)]),headStyles:HS,styles:TS,margin:{left:ML,right:ML}});
-    y=doc.lastAutoTable.finalY+6;if(FONT)doc.setFont(FONT);doc.setFontSize(8);doc.setTextColor.apply(doc,C.grey);doc.text(`${t("eff")}: ${nf(a.eff*100)}%    ${t("val_share")}: ${nf(a.valShare*100)}%    ${t("ct_proc")}: ${dur(a.bottleneck)}`,ML,y);y+=14;});
-  const asis=normRow("regular",0,0),best=normRow("regular",1,1);
-  y=pdfHead(doc,t("norms_t"),y,ML,FONT);
-  doc.autoTable({startY:y+4,head:[[t("h_norm"),t("h_ctpc"),t("h_psh"),t("normh"),t("h_eff")]],body:[
-    [t("n_asis"),dur(asis.ctpc,false),nf0(asis.perShift),nf0(asis.perH),nf(asis.eff*100)+"%"],
-    [t("n_best"),dur(best.ctpc,false),nf0(best.perShift),nf0(best.perH),nf(best.eff*100)+"%"]],headStyles:HS,styles:TS,margin:{left:ML,right:ML}});
-  y=doc.lastAutoTable.finalY+16;
-  if(S.comments){y=pdfHead(doc,t("comments"),y,ML,FONT);if(FONT)doc.setFont(FONT);doc.setFontSize(9).setTextColor(40,40,40);const ls=doc.splitTextToSize(S.comments,W-2*ML);if(y+ls.length*12>Hp-40){doc.addPage();y=40;}doc.text(ls,ML,y+6);}
-  doc.save(fileBase()+".pdf");dirty=false;toast(t("exp_ok"));}
+async function exportPDF(){
+  if(typeof html2canvas!=="function"){toast(t("pdf_nolib"));return;}
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"pt",format:"a4"});const FONT=regFont(doc);
+  const W=doc.internal.pageSize.getWidth(),Hp=doc.internal.pageSize.getHeight(),M=24,BAND=30;
+  const prev={view:AN.view,nva:AN.nva,tab:TAB};
+  toast(t("pdf_render"));
+  const bg=getComputedStyle(document.body).backgroundColor||"#ffffff";
+  const combos=[[true,t("with_nva")],[false,t("wo_nva")]];
+  let firstPage=true;
+  for(const [nva,lbl] of combos){
+    AN.view="combined";AN.nva=nva;TAB="analyze";renderAnalyze();
+    await new Promise(res=>setTimeout(()=>requestAnimationFrame(()=>requestAnimationFrame(res)),90));
+    const node=document.querySelector("#app .screen");if(!node)continue;
+    const canvas=await html2canvas(node,{scale:2,backgroundColor:bg,useCORS:true,logging:false,windowWidth:node.scrollWidth,scrollX:0,scrollY:0});
+    const imgW=W-2*M, pxPerPt=canvas.width/imgW, availPt=Hp-BAND-M, availPx=availPt*pxPerPt;
+    let sY=0;
+    while(sY<canvas.height-1){
+      if(!firstPage)doc.addPage();firstPage=false;
+      doc.setFillColor(5,61,120);doc.rect(0,0,W,BAND,"F");
+      if(FONT)doc.setFont(FONT);doc.setFontSize(11);doc.setTextColor(255,255,255);
+      doc.text(`TECOR — ${t("v_comb")} · ${lbl}`,M,BAND-10);
+      doc.setFontSize(8);doc.text(`${S.meta.process||""}  ${S.meta.date||""}`.trim(),W-M,BAND-10,{align:"right"});
+      const sliceH=Math.min(availPx,canvas.height-sY);
+      const tmp=document.createElement("canvas");tmp.width=canvas.width;tmp.height=Math.round(sliceH);
+      tmp.getContext("2d").drawImage(canvas,0,sY,canvas.width,sliceH,0,0,canvas.width,sliceH);
+      doc.addImage(tmp.toDataURL("image/jpeg",0.92),"JPEG",M,BAND+8,imgW,sliceH/pxPerPt);
+      sY+=sliceH;
+    }
+  }
+  AN.view=prev.view;AN.nva=prev.nva;TAB=prev.tab;render();
+  doc.save(fileBase()+".pdf");dirty=false;toast(t("exp_ok"));
+}
 
 /* ---- modal/lang ---- */
 function confirmModal(msg,onYes){$("#modal").innerHTML=`<h3>${esc(msg)}</h3><div class="row" style="margin-top:16px"><button class="btn danger" id="cy">${t("del")}</button><button class="btn grey" id="cn">${t("cancel")}</button></div>`;
