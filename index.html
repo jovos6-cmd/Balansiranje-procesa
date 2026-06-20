@@ -915,8 +915,10 @@ async function exportPDF(){
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"pt",format:"a4"});const FONT=regFont(doc);
   const W=doc.internal.pageSize.getWidth(),Hp=doc.internal.pageSize.getHeight(),M=24,BAND=30;
   const prev={view:AN.view,nva:AN.nva,tab:TAB};
+  const prevTheme=document.documentElement.getAttribute("data-theme");
+  document.documentElement.setAttribute("data-theme","light");
   toast(t("pdf_render"));
-  const bg=getComputedStyle(document.body).backgroundColor||"#ffffff";
+  const bg="#ffffff";
   const combos=[[true,t("with_nva")],[false,t("wo_nva")]];
   let firstPage=true;
   for(const [nva,lbl] of combos){
@@ -939,6 +941,7 @@ async function exportPDF(){
       sY+=sliceH;
     }
   }
+  if(prevTheme)document.documentElement.setAttribute("data-theme",prevTheme);else document.documentElement.removeAttribute("data-theme");
   AN.view=prev.view;AN.nva=prev.nva;TAB=prev.tab;render();
   doc.save(fileBase()+".pdf");dirty=false;toast(t("exp_ok"));
 }
