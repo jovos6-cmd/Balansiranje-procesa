@@ -925,7 +925,7 @@ async function exportPDF(){
     AN.view="combined";AN.nva=nva;TAB="analyze";renderAnalyze();
     await new Promise(res=>setTimeout(()=>requestAnimationFrame(()=>requestAnimationFrame(res)),90));
     const node=document.querySelector("#app .screen");if(!node)continue;
-    const canvas=await html2canvas(node,{scale:2,backgroundColor:bg,useCORS:true,logging:false,windowWidth:node.scrollWidth,scrollX:0,scrollY:0});
+    const canvas=await html2canvas(node,{scale:2,backgroundColor:bg,useCORS:true,logging:false,windowWidth:node.scrollWidth,scrollX:0,scrollY:0,onclone:(d)=>{try{d.documentElement.setAttribute("data-theme","light");const st=d.createElement("style");st.textContent=":root{--bg1:#ffffff;--bg2:#ffffff;--surface:#ffffff;--surface2:#eef3f9;--elev:#ffffff;--card2:#ffffff;--input-bg:#ffffff;--nav-bg:#ffffff;--th-bg:rgba(5,61,120,.06);--tint:rgba(5,61,120,.03);--ink:#10263c;--muted:#54677b;--faint:#8294a6;--line:rgba(5,61,120,.18);--line2:rgba(5,61,120,.10)}";d.head.appendChild(st);if(d.body)d.body.style.background="#ffffff";}catch(e){}}});
     const imgW=W-2*M, pxPerPt=canvas.width/imgW, availPt=Hp-BAND-M, availPx=availPt*pxPerPt;
     let sY=0;
     while(sY<canvas.height-1){
