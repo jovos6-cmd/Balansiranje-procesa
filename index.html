@@ -430,10 +430,10 @@ function processData(view){
   if(view==="combined"){
     S.operations.filter(o=>o.type==="prep"&&o.linkTo&&o.linkTo!=="none").forEach(p=>{
       const tgt=byId[p.linkTo];if(tgt){const b=opBreakdown(p);const wp=Number(p.workers)||1;const k=wp>0?wp:1;
-        tgt.va+=b.va/k;tgt.sp+=b.sp/k;tgt.nva+=b.nva/k;tgt.prep+=b.base/k;tgt.ct+=b.base/k;}});}
+        tgt.prep+=b.base/k;tgt.ct+=b.base/k;}});}
   return rows;
 }
-function prepData(){return S.operations.filter(o=>o.type==="prep").map(o=>{const b=opBreakdown(o);const w=Number(o.workers)||1;const k=w>0?w:1;return{op:o,va:b.va/k,sp:b.sp/k,nva:b.nva/k,prep:b.base/k,ct:b.base/k,workers:k};});}
+function prepData(){return S.operations.filter(o=>o.type==="prep").map(o=>{const b=opBreakdown(o);const w=Number(o.workers)||1;const k=w>0?w:1;return{op:o,va:b.va/k,sp:b.sp/k,nva:b.nva/k,prep:0,ct:b.base/k,workers:k};});}
 function analysis(view,withNVA){
   let rows=view==="prep"?prepData():processData(view);
   if(!withNVA)rows=rows.map(r=>({...r,ct:r.ct-r.nva,nva:0}));
@@ -459,7 +459,7 @@ function normRow(view,nvaRed,gapRed){const base=analysis(view,true);
 function cascade(view,withNVA){
   view=view||AN.view;withNVA=(withNVA===undefined)?AN.nva:withNVA;
   const a=analysis(view,withNVA);
-  const src=a.rows.filter(r=>r.ct>0).map(r=>({op:r.op,ct:r.ct,va:r.va,sp:r.sp,nva:r.nva,workers:Number(r.workers)||1}));
+  const src=a.rows.filter(r=>r.ct>0).map(r=>({op:r.op,ct:r.ct,va:r.va,sp:r.sp,nva:r.nva,prep:r.prep||0,workers:Number(r.workers)||1}));
   const P=(Number(S.shiftHours)||8)*3600;
   src.forEach(r=>{r.maxOut=r.ct>0?P/r.ct:0;});
   let prev=Infinity;
@@ -476,12 +476,13 @@ function cascade(view,withNVA){
   const vaH=produced*src.reduce((a,r)=>a+r.va,0)/3600;
   const spH=produced*src.reduce((a,r)=>a+r.sp,0)/3600;
   const nvaH=produced*src.reduce((a,r)=>a+r.nva,0)/3600;
+  const prepH=produced*src.reduce((a,r)=>a+(r.prep||0),0)/3600;
   const sumWorkers=src.reduce((a,r)=>a+r.workers,0);
   const capacityH=(P/3600)*sumWorkers;
   const bottleneck=src.length?Math.max(...src.map(r=>r.ct)):0;
   const takt=taktSec();
   const H=Number(S.shiftHours)||8;
-  return {rows:src,produced,fedIn,wip,activeH,waitingH,excessH,capacityH,vaH,spH,nvaH,sumWorkers,
+  return {rows:src,produced,fedIn,wip,activeH,waitingH,excessH,capacityH,vaH,spH,nvaH,prepH,sumWorkers,
     bottleneck,takt,inTime:takt>0?(bottleneck<=takt+1e-9):null,komH:produced/H,P};
 }
 
@@ -769,14 +770,19 @@ function drawYama(){const box=$("#yama");const leg=$("#ylegend");const tk=taktSe
       <div class="ybar-wrap" style="height:${H}px"><div class="ybar" style="height:${Math.max(h,2)}px">${segHtml}</div></div>
       <div class="ylabel">${esc(name||"—")}</div></div>`;};
   if(AN.yama==="task"){
-    const reg=S.operations.filter(o=>o.type==="regular");
-    const rowsT=reg.map(o=>{const w=Number(o.workers)||1;const tasks=(o.tasks||[]).map(tk2=>({name:tk2.name,cat:tk2.category,v:taskStats(tk2).avg/w})).filter(s=>s.v>0.001&&(AN.nva||s.cat!=="NVA"));const ct=tasks.reduce((a,s)=>a+s.v,0);return{op:o,tasks,ct};}).filter(r=>r.ct>0);
+    const baseOps=AN.view==="prep"?S.operations.filter(o=>o.type==="prep"):S.operations.filter(o=>o.type==="regular");
+    const rowsT=baseOps.map(o=>{const w=Number(o.workers)||1;
+      let tasks=(o.tasks||[]).map(tk2=>({name:tk2.name,cat:tk2.category,v:taskStats(tk2).avg/w,prep:false}));
+      if(AN.view==="combined"){S.operations.filter(p=>p.type==="prep"&&p.linkTo===o.id).forEach(p=>{const wp=Number(p.workers)||1;
+        (p.tasks||[]).forEach(tk2=>tasks.push({name:(p.name?p.name+" · ":"")+(tk2.name||t("prep")),cat:tk2.category,v:taskStats(tk2).avg/wp,prep:true}));});}
+      tasks=tasks.filter(s=>s.v>0.001&&(AN.nva||s.cat!=="NVA"));const ct=tasks.reduce((a,s)=>a+s.v,0);return{op:o,tasks,ct};}).filter(r=>r.ct>0);
     if(!rowsT.length){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;leg.innerHTML="";return;}
     const bnv=Math.max(...rowsT.map(r=>r.ct));const maxV=Math.max(bnv,tk||0)*1.16||1;
     box.innerHTML=`<div class="yama">${tk?`<div class="refline" style="bottom:${36+(tk/maxV)*H}px"><span>Takt ${dur(tk)}</span></div>`:""}
-      ${rowsT.map(r=>{const seg=r.tasks.map(s=>`<div class="yseg ${s.cat.toLowerCase()}-bgc" style="height:${(s.v/r.ct)*100}%" title="${esc(s.name||"")} ${dur(s.v)}"></div>`).join("");
+      ${rowsT.map(r=>{const seg=r.tasks.map(s=>`<div class="yseg ${(s.prep?"prep":s.cat.toLowerCase())}-bgc" style="height:${(s.v/r.ct)*100}%" title="${esc(s.name||"")} ${dur(s.v)}"></div>`).join("");
         return col(r.op.name,r.ct,seg,Math.abs(r.ct-bnv)<1e-6,maxV);}).join("")}</div>`;
-    leg.innerHTML=[["va","va_full"],["sp","sp_full"]].concat(AN.nva?[["nva","nva_full"]]:[]).map(([c,k])=>`<span><span class="dot ${c}-bgc"></span>${t(k)}</span>`).join("");
+    const hasPrep=rowsT.some(r=>r.tasks.some(s=>s.prep));
+    leg.innerHTML=[["va","va_full"],["sp","sp_full"]].concat(AN.nva?[["nva","nva_full"]]:[]).concat(hasPrep?[["prep","prep_full"]]:[]).map(([c,k])=>`<span><span class="dot ${c}-bgc"></span>${t(k)}</span>`).join("");
     return;
   }
   const a=analysis(AN.view,AN.nva);if(!a.rows.length){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;leg.innerHTML="";return;}
@@ -825,9 +831,9 @@ function drawStruktura(){const c=cascade();const box=$("#struk");
   if(c.capacityH<=0){box.innerHTML=`<p class="muted small">${t("no_data")}</p>`;return;}
   const total=c.capacityH;
   const _cs=getComputedStyle(document.documentElement),_rc=v=>((_cs.getPropertyValue(v)||"").trim()||v);
-  const col={va:_rc("--va"),sp:_rc("--sp"),nva:_rc("--nva"),wait:_rc("--accent"),exc:_rc("--prep")};
+  const col={va:_rc("--va"),sp:_rc("--sp"),nva:_rc("--nva"),prep:_rc("--prep"),wait:_rc("--accent"),exc:"#8b6fc7"};
   const _line=_rc("--line");
-  const segs=[["va",t("va_full"),c.vaH],["sp",t("sp_full"),c.spH],["nva",t("nva_full"),c.nvaH],["wait",t("st_wait"),c.waitingH],["exc",t("st_excess"),c.excessH]];
+  const segs=[["va",t("va_full"),c.vaH],["sp",t("sp_full"),c.spH],["nva",t("nva_full"),c.nvaH],["prep",t("prep_full"),c.prepH],["wait",t("st_wait"),c.waitingH],["exc",t("st_excess"),c.excessH]];
   let acc=0;const R=54,CIRC=2*Math.PI*R,cx=70,cy=70;
   const arcs=segs.filter(s=>s[2]>0.0001).map(s=>{const len=s[2]/total*CIRC;const el=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${col[s[0]]}" stroke-width="22" stroke-dasharray="${len.toFixed(2)} ${(CIRC-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;acc+=len;return el;}).join("");
   box.innerHTML=`<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
