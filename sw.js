@@ -1,4 +1,4 @@
-const CACHE="tecor-balans-m1-v3";
+const CACHE="tecor-balans-m1-v4";
 const SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./favicon.png","./logo.png","./font.js"];
 const CDN=[
  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",

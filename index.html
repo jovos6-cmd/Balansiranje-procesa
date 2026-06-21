@@ -3,7 +3,7 @@
 <head>
 <script>try{var _t=localStorage.getItem("tecor_theme");if(_t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}</script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#0a1320">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -251,7 +251,7 @@ tr.hl td{background:rgba(255,107,107,.08)}
 <script src="font.js"></script>
 <script>
 "use strict";
-const BUILD="2026-06-21 \u00b7 v3";
+const BUILD="2026-06-21 \u00b7 v4";
 /* ===== icons ===== */
 const ICONS={
  session:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
@@ -299,7 +299,7 @@ const I18N={sr:{
  view:"Pogled",v_reg:"Redovne",v_prep:"Pripremne",v_comb:"Kombinovano",with_nva:"Sa NVA",wo_nva:"Bez NVA",
  ct_proc:"CT procesa (bottleneck)",eff:"Uposlenost linije",val_share:"Udeo dodate vrednosti",total_wc:"Ukupan rad",
  bal_loss:"Balansni gubitak",cap_shift:"Kapacitet / smena",
- pot_t:"Potencijal — eliminacija NVA",pot_now:"Sada (sa NVA) kom/sm.",pot_wo:"Bez NVA kom/sm.",pot_uplift:"Uvećanje izlaza",pot_freed:"Oslobođeni kapacitet",pot_none:"Nema NVA aktivnosti za eliminaciju u ovom pogledu.",pot_note_bn:"NVA je (delom) na uskom grlu → eliminacija diže izlaz za +{p}% (≈ {e} kom/smena više) za isto radno vreme. Smena se ne skraćuje.",pot_note_off:"NVA je uglavnom VAN uskog grla. Eliminacija oslobađa ~{f} h kapaciteta, ali izlaz NE raste sam — to vreme postaje Višak/WIP dok ne: 1) napadneš NVA na uskom grlu, 2) rebalansiraš liniju, ili 3) smanjiš broj izvršilaca. Zato u Strukturi 'Aktivan rad' padne a 'Višak/WIP' poraste.",struk_note:"Model pretpostavlja da sve stanice rade punom brzinom (push). Višak/WIP = prekomerna proizvodnja zbog neuravnoteženosti — kad neke stanice rade brže od uskog grla. Stvarni izlaz po smeni vidi u Kaskadi (Proizvedeno) i kartici Potencijal.",
+ pot_t:"Potencijal — eliminacija NVA",pot_now:"Sada (sa NVA) kom/sm.",pot_wo:"Bez NVA kom/sm.",pot_uplift:"Uvećanje izlaza",pot_freed:"Oslobođeni kapacitet",pot_none:"Nema NVA aktivnosti za eliminaciju u ovom pogledu.",pot_note_bn:"NVA je (delom) na uskom grlu → eliminacija diže izlaz za +{p}% (≈ {e} kom/smena više) za isto radno vreme. Smena se ne skraćuje.",pot_note_off:"NVA je uglavnom VAN uskog grla. Eliminacija oslobađa ~{f} h kapaciteta, ali izlaz NE raste sam — to vreme postaje Višak/WIP dok ne: 1) napadneš NVA na uskom grlu, 2) rebalansiraš liniju, ili 3) smanjiš broj izvršilaca.",struk_note:"Model pretpostavlja da sve stanice rade punom brzinom (push). Višak/WIP = prekomerna proizvodnja zbog neuravnoteženosti — kad neke stanice rade brže od uskog grla.",
  yama_t:"Yamazumi — struktura CT po operaciji",
  optable:"Operacije i CT",h_op:"Operacija",h_oper:"Operater",h_va:"VA",h_sp:"SP",h_nva:"NVA",h_prep:"Prep",h_ct:"CT",h_rate:"kom/h",h_gap:"GAP",h_takt:"vs Takt",
  wip_t:"WIP između operacija",h_pair:"Tačka",h_acc:"Gomilanje (kom/h)",h_wip:"WIP/smena",h_queue:"Čekanje",
@@ -309,7 +309,7 @@ const I18N={sr:{
  norms_t:"Norme i scenariji",n_asis:"Realna (as-is)",n_best:"Best case",n_scn:"Scenario",
  nva_red:"Redukcija NVA",gap_red:"Redukcija GAP",h_norm:"Norma",h_ctpc:"CT/kom",h_psh:"kom/smena",h_eff:"Upos.",
  formula:"CT = VA + SP + NVA·(1−nva%) + GAP·(1−gap%) + Prep",no_data:"Nema dovoljno izmerenih podataka.",
- export_t:"Izvoz",comments:"Komentar / zaključak",concl_ph:"Glavni nalazi i akcije…",
+ export_t:"Izvoz",comments:"Komentar / zaključak",concl_ph:"Glavni nalazi i akcije…",notes_log:"Beleške uz operacije i zahvate",
  e_pdf:"PDF izveštaj",e_xlsx:"Excel (.xlsx)",e_csv:"CSV merenja",e_json:"Sačuvaj sesiju (.json)",exp_ok:"Izvezeno — bezbedno je zatvoriti.",pdf_render:"Pravim PDF…",pdf_nolib:"jsPDF nije učitan — proveri vezu (CDN).",
  sec:"s",min:"min",pcs:"kom",over:"iznad",under:"ispod",ok:"u taktu",none:"—",
  del:"Obriši",cancel:"Odustani",reload_warn:"Imaš merenja koja nisu izvezena. Napustiti stranicu?",
@@ -350,7 +350,7 @@ const I18N={sr:{
  view:"View",v_reg:"Regular",v_prep:"Prep",v_comb:"Combined",with_nva:"With NVA",wo_nva:"Without NVA",
  ct_proc:"Process CT (bottleneck)",eff:"Line utilization",val_share:"Value-added share",total_wc:"Total work",
  bal_loss:"Balancing loss",cap_shift:"Capacity / shift",
- pot_t:"Potential — eliminate NVA",pot_now:"Now (with NVA) pcs/sh.",pot_wo:"Without NVA pcs/sh.",pot_uplift:"Output increase",pot_freed:"Freed capacity",pot_none:"No NVA activities to eliminate in this view.",pot_note_bn:"NVA is (partly) on the bottleneck → eliminating it raises output by +{p}% (≈ {e} more pcs/shift) for the same shift time. The shift isn't shortened.",pot_note_off:"NVA is mostly OFF the bottleneck. Eliminating it frees ~{f} h of capacity, but output does NOT rise by itself — that time becomes Excess/WIP until you: 1) attack NVA on the bottleneck, 2) rebalance the line, or 3) reduce the number of workers. That's why in the Structure 'Active work' drops and 'Excess/WIP' rises.",struk_note:"The model assumes all stations run at full speed (push). Excess/WIP = overproduction from imbalance — when some stations run faster than the bottleneck. See real per-shift output in the Cascade (Produced) and the Potential card.",
+ pot_t:"Potential — eliminate NVA",pot_now:"Now (with NVA) pcs/sh.",pot_wo:"Without NVA pcs/sh.",pot_uplift:"Output increase",pot_freed:"Freed capacity",pot_none:"No NVA activities to eliminate in this view.",pot_note_bn:"NVA is (partly) on the bottleneck → eliminating it raises output by +{p}% (≈ {e} more pcs/shift) for the same shift time. The shift isn't shortened.",pot_note_off:"NVA is mostly OFF the bottleneck. Eliminating it frees ~{f} h of capacity, but output does NOT rise by itself — that time becomes Excess/WIP until you: 1) attack NVA on the bottleneck, 2) rebalance the line, or 3) reduce the number of workers.",struk_note:"The model assumes all stations run at full speed (push). Excess/WIP = overproduction from imbalance — when some stations run faster than the bottleneck.",
  yama_t:"Yamazumi — CT structure per operation",
  optable:"Operations & CT",h_op:"Operation",h_oper:"Operator",h_va:"VA",h_sp:"SP",h_nva:"NVA",h_prep:"Prep",h_ct:"CT",h_rate:"pcs/h",h_gap:"GAP",h_takt:"vs Takt",
  wip_t:"WIP between operations",h_pair:"Point",h_acc:"Build-up (pcs/h)",h_wip:"WIP/shift",h_queue:"Queue",
@@ -360,7 +360,7 @@ const I18N={sr:{
  norms_t:"Norms & scenarios",n_asis:"As-is",n_best:"Best case",n_scn:"Scenario",
  nva_red:"NVA reduction",gap_red:"GAP reduction",h_norm:"Norm",h_ctpc:"CT/pc",h_psh:"pcs/shift",h_eff:"Util.",
  formula:"CT = VA + SP + NVA·(1−nva%) + GAP·(1−gap%) + Prep",no_data:"Not enough measured data.",
- export_t:"Export",comments:"Comment / conclusion",concl_ph:"Key findings and actions…",
+ export_t:"Export",comments:"Comment / conclusion",concl_ph:"Key findings and actions…",notes_log:"Operation & task notes",
  e_pdf:"PDF report",e_xlsx:"Excel (.xlsx)",e_csv:"CSV measurements",e_json:"Save session (.json)",exp_ok:"Exported — safe to close.",pdf_render:"Building PDF…",pdf_nolib:"jsPDF not loaded — check CDN.",
  sec:"s",min:"min",pcs:"pcs",over:"over",under:"under",ok:"on takt",none:"—",
  del:"Delete",cancel:"Cancel",reload_warn:"You have measurements that weren't exported. Leave the page?",
@@ -422,6 +422,9 @@ function taskStats(tk){const v=(tk.iters||[]).filter(x=>x>0);if(!v.length)return
 function opBreakdown(op){let va=0,sp=0,nva=0;(op.tasks||[]).forEach(tk=>{const a=taskStats(tk).avg;if(tk.category==="VA")va+=a;else if(tk.category==="SP")sp+=a;else nva+=a;});return{va,sp,nva,base:va+sp+nva};}
 function prepAvgPieces(op){const v=(op.pieceMeas||[]).filter(x=>x>0);if(v.length)return v.reduce((a,b)=>a+b,0)/v.length;return Number(op.prepPiecesFb)||Number(op.prepPieces)||0;}
 function prepPerPiece(op){const w=Number(op.workers)||1;return opBreakdown(op).base/(w>0?w:1);}
+function collectComments(){const out=[];(S.operations||[]).forEach(op=>{const on=(op.name||"").trim()||"\u2014";
+  if(op.comment&&op.comment.trim())out.push({who:on,txt:op.comment.trim()});
+  (op.tasks||[]).forEach(tk=>{if(tk.comment&&tk.comment.trim())out.push({who:on+" \u00b7 "+((tk.name||"").trim()||"\u2014"),txt:tk.comment.trim()});});});return out;}
 function taktSec(){const T=S.takt;if(T.mode==="direct")return Number(T.directSec)||0;const q=Number(T.demandQty)||0;return q>0?((Number(T.availMin)||0)*60)/q:0;}
 function processData(view){
   const reg=S.operations.filter(o=>o.type==="regular");
@@ -497,7 +500,7 @@ function render(){if(!S){renderHome();return;}({home:renderHome,setup:renderSetu
 function renderHome(){const m=$("#app");
   if(!S){m.innerHTML=`<div class="screen"><div class="card">
     <div class="eyebrow">TECOR · Lean & Kaizen</div><h2>${t("home_t")}</h2>
-    <p class="small"><a href="https://www.tecor.rs" target="_blank" rel="noopener" style="color:var(--accent-2);text-decoration:none;font-weight:700">https://www.tecor.rs</a></p>
+    <p class="small"><a href="https://www.tecor.rs" target="_blank" rel="noopener" style="color:var(--accent-2);text-decoration:none;font-weight:700">www.tecor.rs</a></p>
     <p class="small" style="color:var(--faint);font-size:11px;margin:-4px 0 0">build ${BUILD}</p>
     <button class="btn accent wide" id="bNew" style="margin-top:10px">${ic("record")} ${t("new_session")}</button><div id="auto"></div>
     <hr class="sep"><label class="btn ghost wide" style="cursor:pointer">${ic("folder")} ${t("load_json")}<input type="file" accept=".json" id="lj" class="hide"></label></div></div>`;
@@ -837,15 +840,15 @@ function drawStruktura(){const c=cascade();const box=$("#struk");
   const segs=[["va",t("va_full"),c.vaH],["sp",t("sp_full"),c.spH],["nva",t("nva_full"),c.nvaH],["prep",t("prep_full"),c.prepH],["wait",t("st_wait"),c.waitingH],["exc",t("st_excess"),c.excessH]];
   let acc=0;const R=54,CIRC=2*Math.PI*R,cx=70,cy=70;
   const arcs=segs.filter(s=>s[2]>0.0001).map(s=>{const len=s[2]/total*CIRC;const el=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${col[s[0]]}" stroke-width="22" stroke-dasharray="${len.toFixed(2)} ${(CIRC-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;acc+=len;return el;}).join("");
-  box.innerHTML=`<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-    <div style="position:relative;width:140px;height:140px;flex:none">
+  box.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px;align-items:stretch">
+    <div style="position:relative;width:140px;height:140px;flex:none;align-self:center">
       <svg width="140" height="140" viewBox="0 0 140 140"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${_line}" stroke-width="22"/>${arcs}</svg>
       <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
         <div class="tnum" style="font-size:1.4rem;font-weight:850">${nf0(total)}</div><div class="xs muted">${t("st_capacity")} (${t("hours")})</div></div></div>
-    <div style="flex:1;min-width:190px"><table style="width:100%;font-size:.85rem"><tbody>
-      ${segs.map(s=>`<tr><td><span class="dot" style="background:${col[s[0]]}"></span> ${s[1]}</td><td class="num tnum">${nf(s[2],1)} ${t("hours")}</td><td class="num muted">${nf0(s[2]/total*100)}%</td></tr>`).join("")}
-      <tr style="border-top:1px solid var(--line)"><td><b>${t("st_active")}</b></td><td class="num tnum"><b>${nf(c.activeH,1)} ${t("hours")}</b></td><td class="num muted">${nf0(c.activeH/total*100)}%</td></tr>
-      </tbody></table></div></div><p class="note" style="margin-top:10px">${t("struk_note")}</p>`;
+    <table style="width:100%;font-size:.85rem;table-layout:fixed"><tbody>
+      ${segs.map(s=>`<tr><td style="word-break:break-word"><span class="dot" style="background:${col[s[0]]}"></span> ${s[1]}</td><td class="num tnum" style="width:78px;white-space:nowrap">${nf(s[2],1)} ${t("hours")}</td><td class="num muted" style="width:52px;white-space:nowrap">${nf0(s[2]/total*100)}%</td></tr>`).join("")}
+      <tr style="border-top:1px solid var(--line)"><td><b>${t("st_active")}</b></td><td class="num tnum" style="width:78px;white-space:nowrap"><b>${nf(c.activeH,1)} ${t("hours")}</b></td><td class="num muted" style="width:52px;white-space:nowrap">${nf0(c.activeH/total*100)}%</td></tr>
+      </tbody></table></div><p class="note" style="margin-top:10px">${t("struk_note")}</p>`;
 }
 function drawWip(){const w=wipData(AN.view);const box=$("#wip");
   if(!w.length){box.innerHTML=`<p class="muted small">${t("no_wip")}</p>`;return;}
@@ -876,7 +879,7 @@ function drawNorm(){const box=$("#norm");const asis=normRow(AN.view,0,0),best=no
 /* ---- EXPORT (v1) ---- */
 function renderExport(){const m=$("#app");
   m.innerHTML=`<div class="screen">
-   <div class="card"><div class="field"><label class="f">${t("comments")}</label><textarea id="ec" rows="3" placeholder="${t("concl_ph")}">${esc(S.comments||"")}</textarea></div></div>
+   <div class="card">${(()=>{const cc=collectComments();return cc.length?`<label class="f">${t("notes_log")}</label><div style="display:flex;flex-direction:column;gap:8px;margin:6px 0 14px">${cc.map(x=>`<div style="background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:8px 10px"><div class="xs" style="color:var(--accent);font-weight:800;margin-bottom:3px">${esc(x.who)}</div><div style="font-size:.9rem;white-space:pre-wrap">${esc(x.txt)}</div></div>`).join("")}</div>`:"";})()}<div class="field"><label class="f">${t("comments")}</label><textarea id="ec" rows="3" placeholder="${t("concl_ph")}">${esc(S.comments||"")}</textarea></div></div>
    <div class="card"><h2 style="margin-bottom:12px">${t("export_t")}</h2>
      <button class="btn accent wide" id="ePdf" style="margin-bottom:10px">${ic("doc")} ${t("e_pdf")}</button>
      <button class="btn ghost wide" id="eXlsx" style="margin-bottom:10px">${ic("sheet")} ${t("e_xlsx")}</button>
@@ -889,13 +892,13 @@ function fileBase(){const p=(S.meta.process||"proces").replace(/[^\w\u00C0-\u017
 function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),3000);dirty=false;toast(t("exp_ok"));}
 function exportJSON(){S.lang=LANG;dl(new Blob([JSON.stringify(S,null,2)],{type:"application/json"}),fileBase()+".json");}
 function exportCSV(){const rows=[["Operacija","Tip","Operater","Zahvat","Kategorija","Iteracija","Vreme_s"]];
-  S.operations.forEach(op=>{if(op.type==="prep"){rows.push([op.name,"prep","","prep","PREP","1",nf(prepPerPiece(op))]);return;}
-    op.tasks.forEach(tk=>(tk.iters||[]).forEach((v,i)=>rows.push([op.name,"regular",op.operator||"",tk.name,tk.category,i+1,nf(v/1000)])));});
+  S.operations.forEach(op=>{const tip=op.type==="prep"?"prep":"regular";
+    op.tasks.forEach(tk=>(tk.iters||[]).forEach((v,i)=>rows.push([op.name,tip,op.operator||"",tk.name,tk.category,i+1,nf(v/1000)])));});
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(";")).join("\r\n");dl(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),fileBase()+".csv");}
 function exportXLSX(){const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["TECOR — Balansiranje"],[],[t("client"),S.meta.client],[t("process"),S.meta.process],[t("date"),S.meta.date],["Takt (s)",nf(taktSec())]]),"Info");
-  const meas=[["Operacija","Operater","Zahvat","Kategorija","Iteracija","Vreme_s"]];
-  S.operations.filter(o=>o.type==="regular").forEach(op=>op.tasks.forEach(tk=>(tk.iters||[]).forEach((v,i)=>meas.push([op.name,op.operator||"",tk.name,tk.category,i+1,Number((v/1000).toFixed(2))]))));
+  const meas=[["Operacija","Tip","Operater","Zahvat","Kategorija","Iteracija","Vreme_s"]];
+  S.operations.forEach(op=>op.tasks.forEach(tk=>(tk.iters||[]).forEach((v,i)=>meas.push([op.name,op.type==="prep"?"prep":"regular",op.operator||"",tk.name,tk.category,i+1,Number((v/1000).toFixed(2))]))));
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(meas),"Merenja");
   ["regular","combined"].forEach(view=>{const a=analysis(view,true);const os=[["Operacija","VA_s","SP_s","NVA_s","Prep_s","CT_s","kom/h"]];
     a.rows.forEach(r=>os.push([r.op.name,+r.va.toFixed(2),+r.sp.toFixed(2),+r.nva.toFixed(2),+r.prep.toFixed(2),+r.ct.toFixed(2),Math.round(r.rate)]));
@@ -1023,7 +1026,11 @@ function exportPDF(){
   combo(true,t("with_nva"));
   doc.addPage();fillPage();band();y=BAND+16;
   combo(false,t("wo_nva"));
-  if(S.comments&&S.comments.trim()){h2(t("comments"));setF(9,C.ink);const L=doc.splitTextToSize(S.comments.trim(),W-2*M);ensure(L.length*12+6);doc.text(L,M,y+8);y+=L.length*12;}
+  {const _cc=collectComments(),_mc=S.comments&&S.comments.trim();
+   if(_cc.length||_mc){h2(t("comments"));
+     _cc.forEach(x=>{setF(8.5,C.accent);const wl=doc.splitTextToSize(x.who,W-2*M);ensure(wl.length*10+4);doc.text(wl,M,y+8);y+=wl.length*10;
+       setF(9,C.ink);const tl=doc.splitTextToSize(x.txt,W-2*M);ensure(tl.length*12+6);doc.text(tl,M,y+6);y+=tl.length*12+8;});
+     if(_mc){setF(9,C.ink);const L=doc.splitTextToSize(S.comments.trim(),W-2*M);ensure(L.length*12+6);doc.text(L,M,y+8);y+=L.length*12;}}}
   doc.save(fileBase()+".pdf");dirty=false;toast(t("exp_ok"));
 }
 
