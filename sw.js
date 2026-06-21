@@ -1,5 +1,5 @@
-const CACHE="tecor-balans-m1-v2";
-const SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./favicon.png","./logo.png","./font.js","./h2c.js"];
+const CACHE="tecor-balans-m1-v3";
+const SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./favicon.png","./logo.png","./font.js"];
 const CDN=[
  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
  "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js",
