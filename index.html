@@ -147,7 +147,10 @@ tr.hl td{background:rgba(255,107,107,.08)}
 .kpi.good::before{background:var(--va)}.kpi.warn::before{background:var(--sp)}.kpi.bad::before{background:var(--nva)}
 /* op/task */
 .op{border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:12px;overflow:hidden;background:var(--tint)}
-.op-head{display:flex;align-items:center;gap:11px;padding:13px 14px;background:linear-gradient(110deg,rgba(255,255,255,.03),transparent)}
+.op-head{display:flex;align-items:center;flex-wrap:wrap;gap:11px;padding:13px 14px;background:linear-gradient(110deg,rgba(255,255,255,.03),transparent)}
+.op-head-main{display:flex;align-items:center;gap:9px;flex:1 1 200px;min-width:0}
+.op-head-main .bare{flex:1;min-width:0}
+.op-head-ctrls{display:flex;align-items:center;gap:8px;margin-left:auto}
 .op.prep .seqbadge{background:var(--prep)}
 .seqbadge{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--navy2),var(--accent));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:850;font-size:.9rem;flex:none}
 .op-body{padding:0 14px 14px}
@@ -212,7 +215,7 @@ tr.hl td{background:rgba(255,107,107,.08)}
 .modal-bg.show{display:flex}
 .modal{background:var(--surface);border:1px solid var(--line);border-radius:18px;max-width:440px;width:100%;padding:22px;box-shadow:var(--sh)}
 .addrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.addrow .btn{flex:1}
-@media(max-width:560px){main{padding:12px}.card{padding:14px}.op-head{padding:11px 12px;gap:9px}.op-body{padding:0 12px 13px}.kpi{padding:12px 13px}.rec-stage{padding:18px 14px}}
+@media(max-width:560px){main{padding:12px}.card{padding:14px}.op-head{padding:11px 12px;gap:9px}.op-head-main{flex-basis:100%}.op-body{padding:0 12px 13px}.kpi{padding:12px 13px}.rec-stage{padding:18px 14px}}
 .flex-between{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .rec-stage{position:sticky;top:56px;z-index:20}
 .rec-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
@@ -251,7 +254,7 @@ tr.hl td{background:rgba(255,107,107,.08)}
 <script src="font.js"></script>
 <script>
 "use strict";
-const BUILD="2026-06-21 \u00b7 v4";
+const BUILD="2026-06-21 \u00b7 v6";
 /* ===== icons ===== */
 const ICONS={
  session:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
@@ -575,13 +578,17 @@ function renderSetup(){const m=$("#app");
   let seq=0;
   box.innerHTML=S.operations.map(op=>{const prep=op.type==="prep";if(!prep)seq++;
     return `<div class="op ${prep?"prep":""}" data-id="${op.id}"><div class="op-head">
-      <span class="thandle" data-drag="op" data-id="${op.id}">${ic("drag")}</span>
-      <span class="seqbadge">${prep?"P":seq}</span>
-      <input class="bare" style="font-weight:800" data-opn="${op.id}" placeholder="${t("op_name")}" value="${esc(op.name)}">
-      <span class="chip ${prep?"prep":""}" style="${prep?"":"background:var(--accent-soft);color:var(--accent-2)"}">${prep?t("prep"):t("reg")}</span>
-      <button class="iconbtn" data-opup="${op.id}">${ic("up","sm")}</button>
-      <button class="iconbtn" data-opdn="${op.id}">${ic("down","sm")}</button>
-      <button class="iconbtn danger" data-delop="${op.id}">${ic("trash","sm")}</button></div>
+      <div class="op-head-main">
+        <span class="thandle" data-drag="op" data-id="${op.id}">${ic("drag")}</span>
+        <span class="seqbadge">${prep?"P":seq}</span>
+        <input class="bare" style="font-weight:800" data-opn="${op.id}" placeholder="${t("op_name")}" value="${esc(op.name)}">
+        <span class="chip ${prep?"prep":""}" style="${prep?"":"background:var(--accent-soft);color:var(--accent-2)"}">${prep?t("prep"):t("reg")}</span>
+      </div>
+      <div class="op-head-ctrls">
+        <button class="iconbtn" data-opup="${op.id}">${ic("up","sm")}</button>
+        <button class="iconbtn" data-opdn="${op.id}">${ic("down","sm")}</button>
+        <button class="iconbtn danger" data-delop="${op.id}">${ic("trash","sm")}</button>
+      </div></div>
       <div class="op-body">${prep?prepBody(op):regBody(op)}</div></div>`;}).join("");
   bindSetup();enableDrag();
 }
